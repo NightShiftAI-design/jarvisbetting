@@ -1,8 +1,13 @@
-"""Sport-first, conservative Streamlit dashboard for Jarvis_Betting."""
+"""Ultra-dense Streamlit research dashboard for Jarvis Betting.
+
+This UI intentionally uses only stored/provider-backed data. If a provider has not
+returned a field yet, the dashboard labels it as Unavailable/No data instead of
+making up projections, hit rates, injuries, weather, or odds.
+"""
 
 from __future__ import annotations
 
-from pathlib import Path
+from datetime import date
 from typing import Any
 
 import pandas as pd
@@ -10,575 +15,571 @@ import plotly.express as px
 import streamlit as st
 import streamlit.components.v1 as components
 
-from backtest import Backtester
 from config import LOG_FILE
-from data_ingestion import (
-    SportsDataIngestionService,
-    empty_games_frame,
-    empty_injuries_frame,
-    empty_line_moves_frame,
-    empty_odds_frame,
-    empty_projections_frame,
-    empty_social_trends_frame,
-    ensure_frame_schema,
-    GAME_COLUMNS,
-    INJURY_COLUMNS,
-    LINE_MOVE_COLUMNS,
-    ODDS_COLUMNS,
-    PROJECTION_COLUMNS,
-    SOCIAL_TREND_COLUMNS,
+from data_ingestion import SportsDataIngestionService
+from data_service import (
+    DashboardData,
+    clear_service_cache,
+    game_odds,
+    game_props,
+    game_weather,
+    injury_splits_proxy,
+    league_games,
+    league_props,
+    league_strong_props,
+    load_dashboard_data,
+    projection_cards,
+    team_abbr,
+    weather_risk,
 )
-from database import Game, Injury, LineMovement, OddsHistory, Projection, get_session, init_db
-from models import (
-    MAX_DISPLAY_EDGE,
-    MIN_REALISM_SCORE,
-    PROP_COLUMNS,
-    PROP_TYPE_ORDER,
-    STRONG_PF_MIN,
-    build_player_props_frame,
-    empty_props_frame,
-    get_available_prop_types,
-    get_props_by_type,
-    parlay_summary,
-    strong_props,
-    suggest_parlays,
-)
-from utils import convert_series_to_est, display_bookmaker, est_now, format_est, is_sharp_book, safe_json_loads
+from models import MAX_DISPLAY_EDGE, MIN_REALISM_SCORE, PROP_TYPE_ORDER, STRONG_PF_MIN, parlay_summary, suggest_parlays
+from utils import est_now, format_est, safe_float
 
-PAGE_TITLE = "Jarvis_Betting"
+APP_TITLE = "Jarvis Betting"
 AUTO_REFRESH_MS = 60 * 60 * 1000
-BG = "#080B10"
-LINE = "rgba(255,255,255,0.08)"
-GREEN = "#28D17C"
-RED = "#FF5563"
-AMBER = "#F6C453"
-CYAN = "#45C7F4"
-MUTED = "#98A2B3"
+LEAGUES = ["NBA", "NHL", "MLB", "NFL"]
+LEAGUE_TO_KEY = {"NBA": "nba", "NHL": "nhl", "MLB": "mlb", "NFL": "nfl"}
+PURPLE = "#8B5CF6"
+GREEN = "#22C55E"
+RED = "#F43F5E"
+YELLOW = "#FBBF24"
+CYAN = "#38BDF8"
+BG = "#070A12"
+PANEL = "#0E1320"
+BORDER = "rgba(255,255,255,.09)"
 
-SPORT_TABS = [
-    {"label": "MLB", "league": "mlb"},
-    {"label": "NBA", "league": "nba"},
-    {"label": "NFL", "league": "nfl"},
-    {"label": "Soccer", "league": "eng.1"},
-    {"label": "NHL", "league": "nhl"},
-    {"label": "CFB", "league": "college-football"},
-    {"label": "WNBA", "league": "wnba"},
+SIDEBAR_TOOLS = {
+    "NBA": [
+        "Defensive Matchups", "Hit Rate Matrix", "First Basket", "Injury Reports", "Injury Splits",
+        "Volume Trends", "Player Stats Summary", "Team Stats", "Odds Discrepancies", "Lineups", "Player Props",
+    ],
+    "MLB": [
+        "HR Matchups", "Exit Velo", "Pitcher Weak Spots", "Team vs Pitcher", "Team vs Pitch Mix",
+        "Hit Rate Matrix", "Ballpark Weather", "Park Factors", "Batter vs Pitcher", "Hit Streaks",
+        "Pitcher Summary", "Bullpen Usage", "Odds Discrepancies", "Lineups", "Player Props", "Projections",
+    ],
+    "NHL": ["Goalie Matchups", "Shot Props", "Team Defense", "Power Play", "Player Trends", "Injury Reports", "Odds Discrepancies", "Player Props"],
+    "NFL": ["Player Props", "Defensive Matchups", "Team Trends", "Injury Reports", "Weather", "Line Movement", "Odds Discrepancies"],
+}
+
+PROP_TABLE_COLUMNS = [
+    "favorite", "pf_score", "team", "position", "player_name", "prop_type", "market_display", "prop_side", "point",
+    "projected_line", "book_badge", "price_american", "hit_rate_l10", "hit_rate_l5", "streak",
+    "season_matchup", "previous_season_hit_rate", "current_season_hit_rate", "display_edge_pct", "confidence", "realism_score", "why",
 ]
 
-GAME_ODDS_COLUMNS = ["bookmaker", "market", "selection_name", "point", "price_american", "implied_probability", "best_line", "sharp_book", "pulled_at_est"]
-PROP_DISPLAY_COLUMNS = ["pf_score", "realism_score", "prop_type", "player_name", "market_display", "prop_side", "point", "projected_line", "line_delta", "bookmaker", "price_american", "display_edge_pct", "confidence", "weather_impact", "injury_flag", "sharp_edge_vs_pinnacle", "hit_rate_l5", "hit_rate_l10", "variance_flag", "why"]
-SHARP_COLUMNS = ["league", "matchup", "sportsbook", "market", "selection_name", "opening_price", "current_price", "opening_point", "current_point", "movement_abs", "sharp_score", "why"]
 
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def load_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    init_db()
-    try:
-        with get_session() as session:
-            games = pd.read_sql(session.query(Game).statement, session.bind)
-            projections = pd.read_sql(session.query(Projection).statement, session.bind)
-            odds = pd.read_sql(session.query(OddsHistory).statement, session.bind)
-            injuries = pd.read_sql(session.query(Injury).statement, session.bind)
-            moves = pd.read_sql(session.query(LineMovement).statement, session.bind)
-    except Exception:
-        return empty_games_frame(), empty_projections_frame(), empty_odds_frame(), empty_injuries_frame(), empty_line_moves_frame()
-    return (
-        ensure_frame_schema(games, GAME_COLUMNS),
-        ensure_frame_schema(projections, PROJECTION_COLUMNS),
-        ensure_frame_schema(odds, ODDS_COLUMNS),
-        ensure_frame_schema(injuries, INJURY_COLUMNS),
-        ensure_frame_schema(moves, LINE_MOVE_COLUMNS),
-    )
-
-
-@st.cache_data(ttl=3600, show_spinner=False)
-def load_social_trends() -> pd.DataFrame:
-    try:
-        return ensure_frame_schema(SportsDataIngestionService().fetch_social_trends(), SOCIAL_TREND_COLUMNS)
-    except Exception:
-        return empty_social_trends_frame()
-
-
-def safe_table(frame: pd.DataFrame, columns: list[str], defaults: dict[str, Any] | None = None) -> pd.DataFrame:
-    defaults = defaults or {}
-    output = frame.copy()
-    for column in columns:
-        if column not in output.columns:
-            output[column] = defaults.get(column, pd.NA)
-    return output.reindex(columns=columns)
-
-
-def inject_css() -> None:
+def set_page() -> None:
+    st.set_page_config(page_title=APP_TITLE, page_icon="JB", layout="wide", initial_sidebar_state="expanded")
     st.markdown(
         f"""
         <style>
-        :root {{ --bg:{BG}; --line:{LINE}; --green:{GREEN}; --red:{RED}; --amber:{AMBER}; --cyan:{CYAN}; --muted:{MUTED}; }}
-        .stApp {{ background: linear-gradient(180deg, #090D13 0%, #080B10 58%, #05070A 100%); color: #F8FAFC; }}
-        [data-testid="stHeader"] {{ background: rgba(8,11,16,0.72); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }}
-        [data-testid="stSidebar"] {{ background: #0B0F15; border-right: 1px solid var(--line); }}
-        .block-container {{ padding-top: 1.1rem; max-width: 1580px; }}
-        h1,h2,h3,h4,p,div,span,label {{ color: #F8FAFC; letter-spacing: 0; }}
-        .topbar {{ border: 1px solid var(--line); background: linear-gradient(135deg, rgba(20,25,34,0.98), rgba(11,15,21,0.98)); padding: 16px 18px; border-radius: 8px; box-shadow: 0 20px 48px rgba(0,0,0,0.32); margin-bottom: 12px; }}
-        .title {{ font-size: 30px; font-weight: 800; line-height: 1.1; }}
-        .subtle {{ color: var(--muted); font-size: 13px; }}
-        .pill {{ display:inline-block; padding: 4px 8px; border: 1px solid var(--line); border-radius: 999px; color: #D7DEE8; background: rgba(255,255,255,0.04); font-size: 12px; margin-right: 6px; margin-top: 8px; }}
-        .kpi {{ border:1px solid var(--line); background: linear-gradient(180deg, rgba(20,25,34,0.98), rgba(16,20,27,0.98)); padding: 13px; border-radius: 8px; min-height: 106px; box-shadow: 0 12px 30px rgba(0,0,0,0.24); }}
-        .kpi-label {{ color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }}
-        .kpi-value {{ font-size: 26px; font-weight: 800; margin-top: 7px; }}
-        .kpi-foot {{ color: var(--muted); font-size: 12px; margin-top: 6px; }}
-        .game-head {{ border:1px solid var(--line); background: rgba(16,20,27,0.88); border-radius: 8px; padding: 12px; margin: 8px 0; }}
-        .teams {{ display:flex; align-items:center; gap:10px; font-size: 18px; font-weight: 750; }}
-        .logo {{ width: 30px; height:30px; border-radius: 50%; background: rgba(69,199,244,0.14); border:1px solid rgba(69,199,244,0.25); display:inline-flex; align-items:center; justify-content:center; font-size: 12px; font-weight: 800; overflow:hidden; }}
+        :root {{ --purple:{PURPLE}; --green:{GREEN}; --red:{RED}; --yellow:{YELLOW}; --cyan:{CYAN}; --bg:{BG}; --panel:{PANEL}; --border:{BORDER}; }}
+        .stApp {{ background:
+            radial-gradient(circle at 12% 0%, rgba(139,92,246,.24), transparent 28%),
+            radial-gradient(circle at 85% 12%, rgba(34,197,94,.14), transparent 25%),
+            linear-gradient(180deg, #090D18 0%, #070A12 52%, #05070D 100%); color:#F8FAFC; }}
+        [data-testid="stHeader"] {{ background: rgba(7,10,18,.74); backdrop-filter: blur(18px); border-bottom: 1px solid var(--border); }}
+        [data-testid="stSidebar"] {{ background: linear-gradient(180deg, #0B1020, #080B14); border-right: 1px solid var(--border); }}
+        .block-container {{ max-width: 1760px; padding-top: 1.05rem; padding-bottom: 3rem; }}
+        h1,h2,h3,h4,p,span,div,label {{ color:#F8FAFC; }}
+        .shell-top {{ position: sticky; top: 0; z-index: 9; border:1px solid var(--border); border-radius:18px; padding:14px 16px; margin-bottom:14px; background: rgba(13,19,32,.86); backdrop-filter: blur(18px); box-shadow: 0 18px 44px rgba(0,0,0,.32); }}
+        .brand-row {{ display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }}
+        .brand {{ display:flex; align-items:center; gap:12px; font-weight:900; font-size:25px; letter-spacing:-.02em; }}
+        .brand-mark {{ width:38px; height:38px; border-radius:12px; display:grid; place-items:center; background:linear-gradient(135deg, var(--purple), #22D3EE); box-shadow: 0 0 32px rgba(139,92,246,.32); font-weight:950; }}
+        .utility {{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }}
+        .chip {{ display:inline-flex; align-items:center; gap:6px; padding:7px 10px; border-radius:999px; border:1px solid var(--border); background:rgba(255,255,255,.045); color:#CBD5E1; font-size:12px; font-weight:700; }}
+        .hero-grid {{ display:grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap:10px; margin:10px 0 16px; }}
+        .metric-card {{ border:1px solid var(--border); border-radius:16px; padding:14px; background:linear-gradient(180deg, rgba(18,26,43,.96), rgba(12,17,29,.96)); box-shadow: 0 14px 32px rgba(0,0,0,.24); }}
+        .metric-label {{ color:#94A3B8; font-size:11px; text-transform:uppercase; letter-spacing:.09em; }}
+        .metric-value {{ font-size:26px; font-weight:900; margin-top:4px; }}
+        .metric-foot {{ color:#94A3B8; font-size:12px; margin-top:3px; }}
+        .panel {{ border:1px solid var(--border); border-radius:18px; background:rgba(14,19,32,.82); padding:14px; box-shadow: 0 16px 36px rgba(0,0,0,.22); margin-bottom:12px; }}
+        .panel-title {{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:18px; font-weight:900; margin-bottom:10px; }}
+        .subtle {{ color:#94A3B8; font-size:12px; }}
+        .game-carousel {{ display:flex; gap:10px; overflow-x:auto; padding: 4px 2px 12px; }}
+        .game-card {{ min-width:220px; border:1px solid var(--border); border-radius:16px; padding:12px; background:rgba(255,255,255,.035); }}
+        .game-card.active {{ border-color:rgba(139,92,246,.78); box-shadow: 0 0 0 1px rgba(139,92,246,.34), 0 16px 36px rgba(139,92,246,.12); }}
+        .teams {{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-weight:900; }}
+        .logo {{ width:32px; height:32px; border-radius:50%; display:inline-grid; place-items:center; background:rgba(139,92,246,.16); border:1px solid rgba(139,92,246,.32); font-size:11px; font-weight:900; overflow:hidden; }}
         .logo img {{ width:100%; height:100%; object-fit:contain; }}
-        .why {{ border-left: 3px solid var(--green); background: rgba(40,209,124,0.07); padding: 10px 12px; border-radius: 6px; color: #DDF9E9; font-size: 13px; margin: 7px 0; }}
-        .empty {{ border: 1px dashed rgba(255,255,255,0.18); background: rgba(255,255,255,0.03); color: var(--muted); padding: 14px; border-radius: 8px; }}
-        .stTabs [data-baseweb="tab-list"] {{ gap: 6px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }}
-        .stTabs [data-baseweb="tab"] {{ background: rgba(255,255,255,0.035); border: 1px solid var(--line); border-bottom: none; border-radius: 8px 8px 0 0; padding: 10px 14px; }}
-        .stTabs [aria-selected="true"] {{ background: linear-gradient(180deg, rgba(69,199,244,0.16), rgba(40,209,124,0.08)); border-color: rgba(69,199,244,0.42); }}
-        div[data-testid="stMetric"] {{ background: rgba(255,255,255,0.03); border: 1px solid var(--line); border-radius: 8px; padding: 10px; }}
-        div[data-testid="stExpander"] {{ border: 1px solid var(--line); border-radius: 8px; background: rgba(16,20,27,0.75); }}
-        @media (max-width: 760px) {{ .title {{ font-size: 22px; }} .kpi-value {{ font-size: 22px; }} .teams {{ font-size: 15px; }} }}
+        .book {{ display:inline-block; min-width:34px; text-align:center; padding:3px 7px; border-radius:7px; background:rgba(139,92,246,.16); border:1px solid rgba(139,92,246,.36); color:#EDE9FE; font-weight:900; font-size:11px; }}
+        .why {{ border-left:3px solid var(--green); background:rgba(34,197,94,.08); border-radius:12px; padding:12px; color:#DCFCE7; margin:8px 0; font-size:13px; }}
+        .empty {{ border:1px dashed rgba(148,163,184,.35); border-radius:16px; padding:18px; background:rgba(255,255,255,.03); color:#94A3B8; }}
+        .risk-clear {{ color:var(--green); }} .risk-chance {{ color:var(--yellow); }} .risk-delay {{ color:#FB923C; }} .risk-post {{ color:var(--red); }}
+        .stTabs [data-baseweb="tab-list"] {{ gap:8px; border-bottom:1px solid var(--border); flex-wrap:wrap; }}
+        .stTabs [data-baseweb="tab"] {{ border:1px solid var(--border); border-bottom:none; border-radius:14px 14px 0 0; background:rgba(255,255,255,.035); padding:10px 18px; font-weight:900; }}
+        .stTabs [aria-selected="true"] {{ background:linear-gradient(180deg, rgba(139,92,246,.34), rgba(139,92,246,.08)); border-color:rgba(139,92,246,.6); }}
+        div[data-testid="stDataFrame"] {{ border:1px solid var(--border); border-radius:14px; overflow:hidden; }}
+        div[data-testid="stExpander"] {{ border:1px solid var(--border); border-radius:16px; background:rgba(14,19,32,.74); }}
+        .footer-note {{ color:#94A3B8; border-top:1px solid var(--border); padding-top:14px; margin-top:26px; font-size:12px; }}
+        @media (max-width: 920px) {{ .hero-grid {{ grid-template-columns: repeat(2, minmax(0,1fr)); }} .brand {{ font-size:21px; }} }}
+        @media (max-width: 620px) {{ .hero-grid {{ grid-template-columns: 1fr; }} .game-card {{ min-width:180px; }} }}
         </style>
         """,
         unsafe_allow_html=True,
     )
 
 
-def inject_hourly_refresh() -> None:
-    components.html(f"<script>setTimeout(function(){{window.parent.location.reload();}}, {AUTO_REFRESH_MS});</script>", height=0, width=0)
+def hourly_refresh() -> None:
+    components.html(f"<script>setTimeout(() => window.parent.location.reload(), {AUTO_REFRESH_MS});</script>", height=0, width=0)
 
 
-def kpi(label: str, value: Any, foot: str, color: str) -> str:
-    return f"<div class='kpi'><div class='kpi-label'>{label}</div><div class='kpi-value' style='color:{color}'>{value}</div><div class='kpi-foot'>{foot}</div></div>"
-
-
-def preprocess(games: pd.DataFrame, projections: pd.DataFrame, odds: pd.DataFrame, injuries: pd.DataFrame, moves: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    games = ensure_frame_schema(games, GAME_COLUMNS)
-    projections = ensure_frame_schema(projections, PROJECTION_COLUMNS)
-    odds = ensure_frame_schema(odds, ODDS_COLUMNS)
-    injuries = ensure_frame_schema(injuries, INJURY_COLUMNS)
-    moves = ensure_frame_schema(moves, LINE_MOVE_COLUMNS)
-    games["commence_time_est"] = convert_series_to_est(games["commence_time"]) if not games.empty else pd.Series(dtype="datetime64[ns, America/New_York]")
-    projections["created_at_est"] = convert_series_to_est(projections["created_at"]) if not projections.empty else pd.Series(dtype="datetime64[ns, America/New_York]")
-    odds["pulled_at_est"] = convert_series_to_est(odds["pulled_at"]) if not odds.empty else pd.Series(dtype="datetime64[ns, America/New_York]")
-    injuries["reported_at_est"] = convert_series_to_est(injuries["reported_at"]) if not injuries.empty else pd.Series(dtype="datetime64[ns, America/New_York]")
-    moves["detected_at_est"] = convert_series_to_est(moves["detected_at"]) if not moves.empty else pd.Series(dtype="datetime64[ns, America/New_York]")
-    return games, projections, odds, injuries, moves
-
-
-def apply_context_filters(props: pd.DataFrame, healthy_only: bool, wind_adjusted_only: bool, sharp_edge_only: bool) -> pd.DataFrame:
-    props = safe_table(props, PROP_COLUMNS, {"injury_flag": False, "weather_impact": 0.0, "sharp_confirmed": True, "sharp_edge_vs_pinnacle": pd.NA})
-    if props.empty:
-        return props
-    filtered = props.copy()
-    if healthy_only:
-        filtered = filtered[filtered["injury_flag"].fillna(False) == False]
-    if wind_adjusted_only:
-        filtered = filtered[pd.to_numeric(filtered["weather_impact"], errors="coerce").fillna(0).abs() > 0]
-    if sharp_edge_only:
-        filtered = filtered[filtered["sharp_confirmed"].fillna(False) == True]
-        filtered = filtered[filtered["sharp_edge_vs_pinnacle"].isna() | (pd.to_numeric(filtered["sharp_edge_vs_pinnacle"], errors="coerce") > 0)]
-    return filtered
-
-
-def sport_frames(league: str, games: pd.DataFrame, odds: pd.DataFrame, injuries: pd.DataFrame, moves: pd.DataFrame, props: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    games_s = games[games["league"].astype(str).eq(league)].copy() if not games.empty else empty_games_frame()
-    odds_s = odds[odds["league"].astype(str).eq(league)].copy() if not odds.empty else empty_odds_frame()
-    injuries_s = injuries[injuries["league"].astype(str).eq(league)].copy() if not injuries.empty else empty_injuries_frame()
-    moves_s = moves[moves["league"].astype(str).eq(league)].copy() if not moves.empty else empty_line_moves_frame()
-    props_s = props[props["league"].astype(str).eq(league)].copy() if not props.empty else empty_props_frame()
-    return games_s, odds_s, injuries_s, moves_s, props_s
-
-
-def filter_prop_type(props: pd.DataFrame, selected_prop_type: str) -> pd.DataFrame:
-    return get_props_by_type(props, selected_prop_type)
-
-
-def grouped_sections(frame: pd.DataFrame) -> list[tuple[str, pd.DataFrame]]:
-    frame = safe_table(frame, PROP_COLUMNS)
-    if frame.empty:
-        return []
-    sections = []
-    for prop_type in PROP_TYPE_ORDER:
-        if prop_type == "All":
-            continue
-        group = frame[frame["prop_type"] == prop_type].copy()
-        if not group.empty:
-            sections.append((prop_type, group.sort_values(["pf_score", "realism_score", "display_edge_pct"], ascending=[False, False, False])))
-    return sections
-
-
-def date_options(games: pd.DataFrame) -> list[pd.Timestamp]:
-    if games.empty or "commence_time_est" not in games:
-        return []
-    dates = games["commence_time_est"].dropna().dt.date.drop_duplicates().sort_values().tolist()
-    return [pd.Timestamp(date) for date in dates]
-
-
-def filter_games_by_date(games: pd.DataFrame, selected_date: Any) -> pd.DataFrame:
-    if games.empty or selected_date is None or "commence_time_est" not in games:
-        return games
-    selected = pd.Timestamp(selected_date).date()
-    filtered = games[games["commence_time_est"].dt.date == selected].copy()
-    return filtered if not filtered.empty else games.sort_values("commence_time_est").head(12).copy()
-
-
-def extract_team_logo(game: pd.Series, home_away: str) -> str | None:
-    raw = safe_json_loads(game.get("raw_json"))
-    competitions = raw.get("competitions") or []
-    if not competitions:
-        return None
-    for competitor in (competitions[0].get("competitors") or []):
-        if competitor.get("homeAway") != home_away:
-            continue
-        logos = ((competitor.get("team") or {}).get("logos") or [])
-        if logos:
-            return logos[0].get("href")
-    return None
-
-
-def logo_html(name: str, url: str | None) -> str:
-    initials = "".join(part[:1] for part in str(name or "TBD").split()[:2]).upper() or "T"
-    if url:
-        return f"<span class='logo'><img src='{url}' alt='{initials}'></span>"
-    return f"<span class='logo'>{initials}</span>"
-
-
-def game_title(game: pd.Series) -> str:
-    away = str(game.get("away_team") or "TBD")
-    home = str(game.get("home_team") or "TBD")
-    start = format_est(game.get("commence_time_est"), "%a %b %d, %I:%M %p %Z")
-    return f"{away} at {home} - {start}"
-
-
-def render_game_header(game: pd.Series) -> None:
-    away = str(game.get("away_team") or "TBD")
-    home = str(game.get("home_team") or "TBD")
-    start = format_est(game.get("commence_time_est"), "%a %b %d, %I:%M %p %Z")
-    status = str(game.get("status") or "Scheduled")
-    st.markdown(
-        f"""
-        <div class='game-head'>
-            <div class='teams'>{logo_html(away, extract_team_logo(game, 'away'))}<span>{away}</span><span class='subtle'>at</span>{logo_html(home, extract_team_logo(game, 'home'))}<span>{home}</span></div>
-            <div class='subtle'>{start} | {status}</div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-
-def game_odds_frame(odds: pd.DataFrame, game_id: Any) -> pd.DataFrame:
-    odds = ensure_frame_schema(odds, [*ODDS_COLUMNS, "pulled_at_est"])
-    frame = odds[(odds["game_id"] == game_id) & (odds["market"].astype(str).isin(["h2h", "spreads", "totals"]))].copy()
-    if frame.empty:
-        return safe_table(pd.DataFrame(), GAME_ODDS_COLUMNS)
-    frame["sharp_book"] = frame["bookmaker"].apply(is_sharp_book)
-    frame["bookmaker"] = frame["bookmaker"].apply(display_bookmaker)
-    frame["price_american"] = pd.to_numeric(frame["price_american"], errors="coerce")
-    frame["best_line"] = frame.groupby(["market", "selection_name"])["price_american"].transform("max") == frame["price_american"]
-    frame["pulled_at_est"] = frame["pulled_at_est"].dt.strftime("%b %d %I:%M %p %Z") if "pulled_at_est" in frame else ""
-    return safe_table(frame.sort_values(["market", "selection_name", "best_line"], ascending=[True, True, False]), GAME_ODDS_COLUMNS)
-
-
-def style_best_lines(frame: pd.DataFrame) -> Any:
-    if frame.empty:
-        return frame
-    def row_style(row: pd.Series) -> list[str]:
-        color = "background-color: rgba(40,209,124,0.16); color: #E9FFF3;" if bool(row.get("best_line")) else ""
-        return [color for _ in row]
-    return frame.style.apply(row_style, axis=1)
-
-
-def display_props(frame: pd.DataFrame) -> pd.DataFrame:
-    frame = safe_table(frame, PROP_DISPLAY_COLUMNS, {"realism_score": 0, "display_edge_pct": 0.0})
-    if not frame.empty:
-        frame["bookmaker"] = frame["bookmaker"].apply(display_bookmaker)
-    return frame
-
-
-def game_props_frame(props: pd.DataFrame, game_id: Any, selected_prop_type: str) -> pd.DataFrame:
-    props = safe_table(props, PROP_COLUMNS, {"pf_score": 0, "edge_pct": 0.0, "display_edge_pct": 0.0, "confidence": 0.0, "realism_score": 0})
-    frame = filter_prop_type(props, selected_prop_type)
-    frame = frame[frame["game_id"] == game_id].copy()
-    if frame.empty:
-        return safe_table(pd.DataFrame(), PROP_DISPLAY_COLUMNS)
-    return display_props(frame.sort_values(["strong_pick", "pf_score", "realism_score", "display_edge_pct"], ascending=[False, False, False, False]))
-
-
-def best_bets_frame(props: pd.DataFrame, game_id: Any, selected_prop_type: str) -> pd.DataFrame:
-    game_props = props[props["game_id"] == game_id].copy() if not props.empty else empty_props_frame()
-    return display_props(strong_props(game_props, prop_type=selected_prop_type))
-
-
-def sharp_edges_frame(moves: pd.DataFrame, games: pd.DataFrame) -> pd.DataFrame:
-    moves = ensure_frame_schema(moves, ["id", "game_id", "sport", "league", "sportsbook", "market", "selection_name", "opening_price", "current_price", "opening_point", "current_point", "movement_abs", "detected_at", "source", "raw_json", "created_at", "updated_at", "detected_at_est"])
-    games = ensure_frame_schema(games, ["id", "league", "home_team", "away_team", "commence_time_est"])
-    if moves.empty:
-        return pd.DataFrame(columns=["league", "matchup", "sportsbook", "market", "selection_name", "opening_price", "current_price", "opening_point", "current_point", "movement_abs", "sharp_score", "why"])
-    latest = moves.sort_values("detected_at_est").groupby(["game_id", "sportsbook", "market", "selection_name"], dropna=False).tail(1)
-    merged = latest.merge(games[["id", "league", "home_team", "away_team", "commence_time_est"]], left_on="game_id", right_on="id", how="left", suffixes=("", "_game"))
-    if "league_game" in merged:
-        merged["league"] = merged["league"].fillna(merged["league_game"])
-    merged["matchup"] = merged["away_team"].fillna("TBD") + " @ " + merged["home_team"].fillna("TBD")
-    merged["sharp_score"] = pd.to_numeric(merged["movement_abs"], errors="coerce").fillna(0).clip(0, 100)
-    merged["why"] = merged.apply(lambda row: f"Line moved {row.get('movement_abs', 0):.1f}; current {row.get('current_price')} from opener {row.get('opening_price')}; matchup {row.get('matchup')}; line movement only, not invented public split data.", axis=1)
-    return safe_table(merged.sort_values("sharp_score", ascending=False), ["league", "matchup", "sportsbook", "market", "selection_name", "opening_price", "current_price", "opening_point", "current_point", "movement_abs", "sharp_score", "why"])
-
-
-def render_why_box(row: pd.Series) -> None:
-    st.markdown(f"<div class='why'><b>WHY</b><br>{row.get('why', 'No explanation available.')}</div>", unsafe_allow_html=True)
-
-
-def render_empty(message: str) -> None:
+def empty_state(message: str) -> None:
     st.markdown(f"<div class='empty'>{message}</div>", unsafe_allow_html=True)
 
 
-def render_grouped_best_bets(frame: pd.DataFrame) -> None:
-    sections = grouped_sections(frame)
-    if not sections:
-        render_empty("No high-confidence +EV picks after the conservative realism filter.")
-        return
-    for prop_type, group in sections:
-        st.markdown(f"#### {prop_type}")
-        st.dataframe(display_props(group), use_container_width=True, hide_index=True)
-        for _, row in group.head(3).iterrows():
-            render_why_box(row)
+def logo_html(abbr: str, url: Any | None = None) -> str:
+    if isinstance(url, str) and url:
+        return f"<span class='logo'><img src='{url}' alt='{abbr}'></span>"
+    return f"<span class='logo'>{abbr}</span>"
 
 
-def render_sport_tab(label: str, league: str, games: pd.DataFrame, odds: pd.DataFrame, injuries: pd.DataFrame, moves: pd.DataFrame, props: pd.DataFrame, stake: float, leg_count: int, global_prop_type: str) -> None:
-    games_s, odds_s, injuries_s, moves_s, props_s = sport_frames(league, games, odds, injuries, moves, props)
-    available_types = get_available_prop_types(props_s)
-    default_type = global_prop_type if global_prop_type in available_types else "All"
-    filter_cols = st.columns([1, 1, 1])
-    dates = date_options(games_s)
-    default_date = dates[0].date() if dates else est_now().date()
-    selected_date = filter_cols[0].date_input(f"{label} date", value=default_date, key=f"date_{league}")
-    selected_prop_type = filter_cols[1].selectbox("Prop Type", available_types, index=available_types.index(default_type), key=f"prop_type_{league}")
-    parlay_prop_type = filter_cols[2].selectbox("Parlay Legs", available_types, index=available_types.index(default_type), key=f"parlay_prop_type_{league}")
-    props_s = filter_prop_type(props_s, selected_prop_type)
-    slate = filter_games_by_date(games_s, selected_date)
-    strong_s = strong_props(props_s, prop_type="All")
-    sharp_s = sharp_edges_frame(moves_s, games_s)
-
-    c1, c2, c3, c4 = st.columns(4)
-    c1.markdown(kpi("Games", len(slate), "Today's/upcoming slate", CYAN), unsafe_allow_html=True)
-    c2.markdown(kpi("Realistic EV Picks", len(strong_s), f"PF {STRONG_PF_MIN}+ and realism {MIN_REALISM_SCORE}+", GREEN), unsafe_allow_html=True)
-    c3.markdown(kpi("Props", len(props_s), f"Filter: {selected_prop_type}", AMBER), unsafe_allow_html=True)
-    c4.markdown(kpi("Max Edge", f"{MAX_DISPLAY_EDGE:.0%}", "Displayed cap", RED), unsafe_allow_html=True)
-
-    if slate.empty:
-        render_empty(f"No {label} games are stored yet. Use Refresh Data after installing dependencies, or ingest odds from the command line.")
-    else:
-        st.markdown("### Games")
-        game_list = slate[["id", "away_team", "home_team", "commence_time_est", "status"]].copy()
-        game_list["start_est"] = game_list["commence_time_est"].dt.strftime("%a %b %d, %I:%M %p %Z")
-        st.dataframe(game_list.reindex(columns=["away_team", "home_team", "start_est", "status"]), use_container_width=True, hide_index=True)
-
-    st.markdown("### Quick Picks")
-    render_grouped_best_bets(strong_s)
-
-    for _, game in slate.head(10).iterrows():
-        with st.expander(game_title(game), expanded=False):
-            render_game_header(game)
-            game_id = game.get("id")
-            live_tab, props_tab, research_tab, best_tab = st.tabs(["Live / Game Odds", "Player Props", "Research / Trends", "Best Bets"])
-
-            with live_tab:
-                game_odds = game_odds_frame(odds_s, game_id)
-                if game_odds.empty:
-                    render_empty("No live/game odds stored for this matchup yet.")
-                else:
-                    st.dataframe(style_best_lines(game_odds), use_container_width=True, hide_index=True)
-
-            with props_tab:
-                game_props = game_props_frame(props_s, game_id, "All")
-                if game_props.empty:
-                    render_empty("No props match the selected prop type for this game.")
-                else:
-                    st.dataframe(
-                        game_props,
-                        use_container_width=True,
-                        hide_index=True,
-                        column_config={
-                            "pf_score": st.column_config.ProgressColumn("PF", min_value=0, max_value=100),
-                            "realism_score": st.column_config.ProgressColumn("Realism", min_value=0, max_value=100),
-                            "display_edge_pct": st.column_config.ProgressColumn("EV Edge", min_value=-0.1, max_value=MAX_DISPLAY_EDGE, format="%.3f"),
-                            "confidence": st.column_config.ProgressColumn("Confidence", min_value=0, max_value=1, format="%.2f"),
-                            "hit_rate_l5": st.column_config.ProgressColumn("L5", min_value=0, max_value=1, format="%.2f"),
-                            "hit_rate_l10": st.column_config.ProgressColumn("L10", min_value=0, max_value=1, format="%.2f"),
-                        },
-                    )
-
-            with research_tab:
-                game_props_raw = props_s[props_s["game_id"] == game_id].copy() if not props_s.empty else empty_props_frame()
-                if game_props_raw.empty:
-                    render_empty("No trends available for the selected prop type.")
-                else:
-                    left, right = st.columns([1.15, 1])
-                    with left:
-                        fig = px.scatter(game_props_raw.head(200), x="display_edge_pct", y="realism_score", size="confidence", color="prop_type", hover_name="player_name", hover_data=["why"], title="Realism vs capped EV edge")
-                        fig.update_layout(template="plotly_dark", paper_bgcolor=BG, plot_bgcolor=BG, height=390)
-                        st.plotly_chart(fig, use_container_width=True)
-                    with right:
-                        research = game_props_raw.groupby("prop_type", dropna=False).agg(avg_pf=("pf_score", "mean"), avg_realism=("realism_score", "mean"), avg_edge=("display_edge_pct", "mean"), props=("player_name", "count")).reset_index().sort_values("avg_realism", ascending=False)
-                        st.dataframe(research, use_container_width=True, hide_index=True)
-                injury_game = injuries_s[(injuries_s["game_id"] == game_id) | (injuries_s["team"].isin([game.get("home_team"), game.get("away_team")]))].copy() if not injuries_s.empty else empty_injuries_frame()
-                if not injury_game.empty:
-                    st.markdown("#### Injury notes")
-                    st.dataframe(safe_table(injury_game, ["team", "player_name", "status", "injury_type", "reason"]), use_container_width=True, hide_index=True)
-
-            with best_tab:
-                best = best_bets_frame(props_s, game_id, "All")
-                render_grouped_best_bets(best)
-
-    st.markdown("### Parlay Builder")
-    parlay_pool = strong_props(get_props_by_type(props_s, parlay_prop_type), prop_type="All")
-    if parlay_pool.empty:
-        render_empty(f"No parlay legs meet the conservative filter for {parlay_prop_type}. Need PF {STRONG_PF_MIN}+, positive EV, realistic line distance, and realism {MIN_REALISM_SCORE}+.")
-    else:
-        suggestions = suggest_parlays(parlay_pool, min_legs=2, max_legs=leg_count, stake=stake, limit=10, prop_type="All")
-        left, right = st.columns([1.15, 1])
-        with left:
-            if suggestions.empty:
-                render_empty("No positive-EV parlay combinations found from the current conservative leg pool.")
-            else:
-                st.dataframe(suggestions.drop(columns=["leg_ids"], errors="ignore"), use_container_width=True, hide_index=True)
-                selected = st.selectbox(f"Load {label} parlay", list(range(len(suggestions))), format_func=lambda idx: f"{suggestions.iloc[idx]['legs']} legs | EV {suggestions.iloc[idx]['ev']:+.2f} | {suggestions.iloc[idx]['risk']}", key=f"parlay_select_{league}")
-                if st.button(f"Load {label} slip", use_container_width=True, key=f"load_slip_{league}"):
-                    st.session_state[f"parlay_{league}"] = suggestions.iloc[selected]["leg_ids"]
-                    st.rerun()
-            options = parlay_pool.head(120).copy()
-            options["label"] = options.apply(lambda row: f"{row['prop_type']} | {row['player_name']} | {row['market_display']} {row['prop_side']} {row.get('point', '')} | PF {int(row['pf_score'])} | Real {int(row['realism_score'])}", axis=1)
-            chosen = st.multiselect("Manual legs", options.index.tolist(), default=st.session_state.get(f"parlay_{league}", []), format_func=lambda idx: options.loc[idx, "label"] if idx in options.index else str(idx), key=f"manual_{league}")
-            st.session_state[f"parlay_{league}"] = chosen
-        with right:
-            leg_ids = [idx for idx in st.session_state.get(f"parlay_{league}", []) if idx in parlay_pool.index]
-            legs = parlay_pool.loc[leg_ids].copy() if leg_ids else empty_props_frame()
-            summary = parlay_summary(legs, stake=stake)
-            s1, s2, s3 = st.columns(3)
-            s1.metric("Legs", summary["legs"])
-            s2.metric("Odds", summary["american_odds"] if summary["american_odds"] is not None else "N/A")
-            s3.metric("EV", f"{summary['ev']:+.2f}")
-            st.markdown(f"<div class='why'><b>WHY</b><br>{summary['why']}</div>", unsafe_allow_html=True)
-            if not legs.empty:
-                st.dataframe(display_props(legs), use_container_width=True, hide_index=True)
-
-    st.markdown("### Sharp Edges")
-    sharp_s = sharp_edges_frame(moves_s, games_s)
-    if sharp_s.empty:
-        render_empty("No line movement records yet. The table is schema-safe and will populate after movement is stored.")
-    else:
-        st.dataframe(sharp_s, use_container_width=True, hide_index=True)
+def kpi(label: str, value: Any, foot: str, color: str = "#F8FAFC") -> None:
+    st.markdown(
+        f"<div class='metric-card'><div class='metric-label'>{label}</div><div class='metric-value' style='color:{color}'>{value}</div><div class='metric-foot'>{foot}</div></div>",
+        unsafe_allow_html=True,
+    )
 
 
-def best_bets_frame(props: pd.DataFrame, game_id: Any, selected_prop_type: str) -> pd.DataFrame:
-    game_props = props[props["game_id"] == game_id].copy() if not props.empty else empty_props_frame()
-    return display_props(strong_props(game_props, prop_type=selected_prop_type))
+def panel_title(title: str, right: str = "") -> None:
+    st.markdown(f"<div class='panel-title'><span>{title}</span><span class='subtle'>{right}</span></div>", unsafe_allow_html=True)
 
 
-def sharp_edges_frame(moves: pd.DataFrame, games: pd.DataFrame) -> pd.DataFrame:
-    moves = ensure_frame_schema(moves, ["id", "game_id", "sport", "league", "sportsbook", "market", "selection_name", "opening_price", "current_price", "opening_point", "current_point", "movement_abs", "detected_at", "source", "raw_json", "created_at", "updated_at", "detected_at_est"])
-    games = ensure_frame_schema(games, ["id", "league", "home_team", "away_team", "commence_time_est"])
-    if moves.empty:
-        return pd.DataFrame(columns=["league", "matchup", "sportsbook", "market", "selection_name", "opening_price", "current_price", "opening_point", "current_point", "movement_abs", "sharp_score", "why"])
-    latest = moves.sort_values("detected_at_est").groupby(["game_id", "sportsbook", "market", "selection_name"], dropna=False).tail(1)
-    merged = latest.merge(games[["id", "league", "home_team", "away_team", "commence_time_est"]], left_on="game_id", right_on="id", how="left", suffixes=("", "_game"))
-    if "league_game" in merged:
-        merged["league"] = merged["league"].fillna(merged["league_game"])
-    merged["matchup"] = merged["away_team"].fillna("TBD") + " @ " + merged["home_team"].fillna("TBD")
-    merged["sharp_score"] = pd.to_numeric(merged["movement_abs"], errors="coerce").fillna(0).clip(0, 100)
-    merged["why"] = merged.apply(lambda row: f"Line moved {row.get('movement_abs', 0):.1f}; current {row.get('current_price')} from opener {row.get('opening_price')}; matchup {row.get('matchup')}; line movement only, not invented public split data.", axis=1)
-    return safe_table(merged.sort_values("sharp_score", ascending=False), ["league", "matchup", "sportsbook", "market", "selection_name", "opening_price", "current_price", "opening_point", "current_point", "movement_abs", "sharp_score", "why"])
+def safe_cols(frame: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
+    out = frame.copy()
+    for col in columns:
+        if col not in out.columns:
+            out[col] = pd.NA
+    return out.reindex(columns=columns)
 
 
-def load_log_tail(limit: int = 180) -> str:
-    path = Path(LOG_FILE)
-    if not path.exists():
-        return "No log file yet."
-    return "".join(path.read_text(encoding="utf-8", errors="ignore").splitlines(True)[-limit:])
+def style_heatmap(frame: pd.DataFrame, cols: list[str]) -> Any:
+    def color_cell(value: Any) -> str:
+        numeric = safe_float(value)
+        if numeric is None:
+            return "color:#94A3B8; background-color:rgba(148,163,184,.06);"
+        scaled = numeric * 100 if abs(numeric) <= 1 else numeric
+        if scaled >= 62:
+            return "background-color:rgba(34,197,94,.22); color:#DCFCE7; font-weight:800;"
+        if scaled <= 42:
+            return "background-color:rgba(244,63,94,.20); color:#FFE4E6; font-weight:800;"
+        return "background-color:rgba(251,191,36,.17); color:#FEF3C7; font-weight:800;"
+    return frame.style.map(color_cell, subset=[c for c in cols if c in frame.columns])
 
 
-def main() -> None:
-    st.set_page_config(page_title=PAGE_TITLE, layout="wide", initial_sidebar_state="expanded")
-    inject_css()
-    inject_hourly_refresh()
+def filter_props(frame: pd.DataFrame, search: str, prop_type: str, game_filter: str, show_alts: bool, side: str) -> pd.DataFrame:
+    out = frame.copy()
+    if out.empty:
+        return out
+    if search:
+        query = search.lower().strip()
+        out = out[
+            out["player_name"].astype(str).str.lower().str.contains(query, na=False)
+            | out["team"].astype(str).str.lower().str.contains(query, na=False)
+            | out["matchup"].astype(str).str.lower().str.contains(query, na=False)
+        ]
+    if prop_type != "All" and "prop_type" in out:
+        out = out[out["prop_type"].astype(str).eq(prop_type)]
+    if game_filter != "All Games" and "matchup" in out:
+        out = out[out["matchup"].astype(str).eq(game_filter)]
+    if not show_alts and "market_display" in out:
+        out = out[~out["market_display"].astype(str).str.contains("Alternate", case=False, na=False)]
+    if side != "Both" and "prop_side" in out:
+        out = out[out["prop_side"].astype(str).str.lower().eq(side.lower())]
+    return out.sort_values(["pf_score", "realism_score", "display_edge_pct"], ascending=[False, False, False], na_position="last")
 
-    st.sidebar.markdown("## Controls")
-    st.sidebar.caption("Manual refresh or hourly auto-refresh only. All times are EST/ET.")
-    global_prop_type = st.sidebar.selectbox("Global Prop Type", PROP_TYPE_ORDER, index=0)
-    st.sidebar.markdown("### Context Filters")
-    healthy_only = st.sidebar.checkbox("Show Only Healthy Players", value=True)
-    wind_adjusted_only = st.sidebar.checkbox("Wind / Weather Adjusted Only", value=False)
-    sharp_edge_only = st.sidebar.checkbox("Require Sharp-Book Edge", value=True)
-    stake = st.sidebar.number_input("Parlay stake", min_value=1.0, max_value=10000.0, value=10.0, step=5.0)
-    leg_count = st.sidebar.slider("Max parlay legs", 2, 6, 3, 1)
-    st.sidebar.markdown(f"PF threshold: **{STRONG_PF_MIN}+**")
-    st.sidebar.markdown(f"Max displayed edge: **{MAX_DISPLAY_EDGE:.0%}**")
-    st.sidebar.markdown(f"Min realism: **{MIN_REALISM_SCORE}+**")
-    if st.sidebar.button("Refresh Data", use_container_width=True):
-        with st.spinner("Refreshing live odds and props..."):
-            try:
-                SportsDataIngestionService().ingest_all_primary_sports()
-                st.sidebar.success("Refresh complete")
-            except Exception as exc:
-                st.sidebar.error(f"Refresh failed: {exc}")
-        st.cache_data.clear()
-        st.rerun()
-    if st.sidebar.button("Clear Cache", use_container_width=True):
-        st.cache_data.clear()
-        st.rerun()
 
-    games, projections, odds, injuries, moves = preprocess(*load_data())
-    social = load_social_trends()
-    props = build_player_props_frame(odds, games, injuries_df=injuries, social_df=social)
-    props = safe_table(props, PROP_COLUMNS, {"pf_score": 0, "edge_pct": 0.0, "display_edge_pct": 0.0, "confidence": 0.0, "realism_score": 0, "weather_impact": 0.0, "injury_flag": False, "sharp_confirmed": True})
-    props = apply_context_filters(props, healthy_only=healthy_only, wind_adjusted_only=wind_adjusted_only, sharp_edge_only=sharp_edge_only)
-    filtered_for_header = get_props_by_type(props, global_prop_type)
-
+def render_top_shell(selected_date: date, data: DashboardData) -> None:
+    last_refresh = format_est(est_now(), "%b %d, %I:%M %p %Z")
     st.markdown(
         f"""
-        <div class='topbar'>
-            <div class='title'>Jarvis_Betting</div>
-            <div class='subtle'>Conservative prop intelligence with capped edges, realism scoring, prop-type filters, and aggressive best-bet filtering.</div>
-            <span class='pill'>ET {format_est(est_now(), '%b %d %I:%M %p %Z')}</span>
-            <span class='pill'>PF {STRONG_PF_MIN}+ only</span>
-            <span class='pill'>Displayed edge capped at {MAX_DISPLAY_EDGE:.0%}</span>
-            <span class='pill'>Strong picks: {len(strong_props(filtered_for_header))}</span>
-            <span class='pill'>Healthy only: {healthy_only}</span>
-            <span class='pill'>Sharp edge required: {sharp_edge_only}</span>
+        <div class='shell-top'>
+          <div class='brand-row'>
+            <div class='brand'><span class='brand-mark'>JB</span><span>Jarvis Betting</span><span class='chip'>Research Dashboard</span></div>
+            <div class='utility'>
+              <span class='chip'>ET {last_refresh}</span>
+              <span class='chip'>Date {selected_date}</span>
+              <span class='chip'>PF {STRONG_PF_MIN}+ Best Bets</span>
+              <span class='chip'>No auth / no locks</span>
+            </div>
+          </div>
         </div>
         """,
         unsafe_allow_html=True,
     )
+    cols = st.columns(4)
+    with cols[0]:
+        kpi("Games Loaded", len(data.games), "Stored ESPN/Odds API slate", CYAN)
+    with cols[1]:
+        kpi("Props Loaded", len(data.props), "Provider-backed props only", PURPLE)
+    with cols[2]:
+        kpi("Best Bets", len(data.strong_props), f"PF {STRONG_PF_MIN}+ and realism {MIN_REALISM_SCORE}+", GREEN)
+    with cols[3]:
+        kpi("Displayed Edge Cap", f"{MAX_DISPLAY_EDGE:.0%}", "Conservative EV display", YELLOW)
 
-    tabs = st.tabs([sport["label"] for sport in SPORT_TABS])
-    for tab, sport in zip(tabs, SPORT_TABS):
-        with tab:
-            render_sport_tab(
-                label=sport["label"],
-                league=sport["league"],
-                games=games,
-                odds=odds,
-                injuries=injuries,
-                moves=moves,
-                props=props,
-                stake=stake,
-                leg_count=leg_count,
-                global_prop_type=global_prop_type,
+
+def render_game_carousel(games: pd.DataFrame, key: str) -> Any | None:
+    if games.empty:
+        empty_state("No games are available for this league/date yet. Refresh data or run ingestion to populate the slate.")
+        return None
+    options = games["id"].tolist()
+    labels = {
+        row["id"]: f"{row.get('away_abbr','TBD')} @ {row.get('home_abbr','TBD')} | {format_est(row.get('commence_time_est'), '%I:%M %p')}"
+        for _, row in games.iterrows()
+    }
+    selected = st.radio("Game carousel", options, format_func=lambda value: labels.get(value, str(value)), horizontal=True, label_visibility="collapsed", key=key)
+    selected_row = games[games["id"].eq(selected)].head(1)
+    st.markdown("<div class='game-carousel'>", unsafe_allow_html=True)
+    for _, row in games.head(18).iterrows():
+        active = " active" if row.get("id") == selected else ""
+        st.markdown(
+            f"""
+            <div class='game-card{active}'>
+              <div class='teams'>{logo_html(row.get('away_abbr'), row.get('away_logo'))}<span>{row.get('away_abbr')}</span><span class='subtle'>@</span><span>{row.get('home_abbr')}</span>{logo_html(row.get('home_abbr'), row.get('home_logo'))}</div>
+              <div class='subtle'>{row.get('start_est', 'Unavailable')}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    st.markdown("</div>", unsafe_allow_html=True)
+    return selected_row.iloc[0] if not selected_row.empty else games.iloc[0]
+
+
+def render_game_summary(game: pd.Series, data: DashboardData) -> None:
+    odds = game_odds(data, game.get("id"))
+    total = odds[odds["market"].eq("totals")].sort_values("pulled_at_est", ascending=False).head(1) if not odds.empty else pd.DataFrame()
+    weather = game_weather(game)
+    risk = weather_risk(weather)
+    temp = weather.get("temperature_f", "Unavailable") if weather else "Unavailable"
+    precip = weather.get("precipitation_probability", "Unavailable") if weather else "Unavailable"
+    wind = f"{weather.get('wind_direction', 'Unavailable')} {weather.get('wind_mph', 'Unavailable')} mph" if weather else "Unavailable"
+    ou = total.iloc[0].get("point") if not total.empty else "Unavailable"
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: kpi("Matchup", f"{game.get('away_abbr')} @ {game.get('home_abbr')}", game.get("start_est", "Unavailable"), PURPLE)
+    with c2: kpi("Ballpark / Venue", game.get("venue") or "Unavailable", f"O/U {ou}", CYAN)
+    with c3: kpi("Weather Risk", risk, f"Temp {temp} | Precip {precip}%", GREEN if risk == "Clear" else YELLOW)
+    with c4: kpi("Wind", wind, "NWS data if available", YELLOW)
+
+
+def render_odds_board(data: DashboardData, game_id: Any | None = None, league: str | None = None) -> None:
+    frame = game_odds(data, game_id) if game_id is not None else data.odds.copy()
+    if league and game_id is None and not frame.empty:
+        frame = frame[frame["league"].astype(str).eq(league)]
+    if frame.empty:
+        empty_state("No odds are stored for this view yet. The board will populate from The Odds API once ingestion has successful responses.")
+        return
+    view = safe_cols(frame, ["matchup", "market", "selection_name", "point", "book_badge", "price_american", "best_price", "sharp_book", "pulled_at_est"])
+    st.dataframe(view, use_container_width=True, hide_index=True)
+
+
+def render_prop_table(frame: pd.DataFrame, key: str) -> None:
+    st.download_button("Export CSV", frame.to_csv(index=False).encode("utf-8"), file_name=f"jarvis_props_{key}.csv", mime="text/csv", use_container_width=False)
+    if frame.empty:
+        empty_state("No player props match the current filters. Jarvis will not show placeholders as real hit rates or lines.")
+        return
+    view = safe_cols(frame, PROP_TABLE_COLUMNS)
+    styled = style_heatmap(view, ["hit_rate_l10", "hit_rate_l5", "current_season_hit_rate", "display_edge_pct", "confidence", "realism_score", "pf_score"])
+    st.dataframe(styled, use_container_width=True, hide_index=True, height=520)
+
+
+def render_player_props_page(data: DashboardData, league: str, key_prefix: str) -> None:
+    props = league_props(data, league)
+    games = sorted(["All Games", *props["matchup"].dropna().astype(str).unique().tolist()]) if not props.empty else ["All Games"]
+    c1, c2, c3, c4, c5 = st.columns([1.4, 1, 1, 1, .8])
+    search = c1.text_input("Search player/team", key=f"{key_prefix}_search", placeholder="Player, team, matchup")
+    prop_type = c2.selectbox("Category", PROP_TYPE_ORDER, key=f"{key_prefix}_prop_type")
+    game_filter = c3.selectbox("Game", games, key=f"{key_prefix}_game")
+    side = c4.radio("Side", ["Both", "Over", "Under"], index=0, horizontal=True, key=f"{key_prefix}_side")
+    show_alts = c5.toggle("Alt lines", value=False, key=f"{key_prefix}_alts")
+    filtered = filter_props(props, search, prop_type, game_filter, show_alts, side)
+    render_prop_table(filtered, key_prefix)
+
+
+def render_best_bets(data: DashboardData, league: str) -> None:
+    frame = league_strong_props(data, league)
+    if frame.empty:
+        empty_state(f"No {league.upper()} picks pass PF {STRONG_PF_MIN}+, positive EV, sharp/realism filters, and conservative line-distance checks.")
+        return
+    for prop_type, group in frame.groupby("prop_type", dropna=False):
+        st.markdown(f"#### {prop_type}")
+        render_prop_table(group.head(25), f"best_{league}_{prop_type}")
+        for _, row in group.head(2).iterrows():
+            st.markdown(f"<div class='why'><b>WHY</b><br>{row.get('why', 'No explanation available.')}</div>", unsafe_allow_html=True)
+
+
+def render_mlb_hr_matchups(data: DashboardData, selected_date: date) -> None:
+    games = league_games(data, "mlb", selected_date)
+    game = render_game_carousel(games, "mlb_hr_carousel")
+    if game is None:
+        return
+    render_game_summary(game, data)
+    st.markdown("### Pitcher Splits")
+    st.selectbox("Pitcher selector", ["Unavailable"], help="Probable pitcher split stats will appear when a configured provider stores them.")
+    cols = ["Season", "vsLHB", "vsRHB", "IP", "BF", "BAA", "wOBA", "SLG", "ISO", "WHIP", "HR", "HR/9", "BB%", "WHIFF%", "K%", "PUTAWAY%", "SWSTR%", "K/9", "Meatball%"]
+    st.dataframe(pd.DataFrame(columns=cols), use_container_width=True, hide_index=True)
+    empty_state("Pitcher split data is unavailable in stored providers right now. No split metrics are fabricated.")
+    st.markdown("### Active Batters")
+    game_props_frame = game_props(data, game.get("id"))
+    batters = game_props_frame[game_props_frame["prop_type"].isin(["Homeruns", "Hits", "Bases / Total Bases", "RBIs"])] if not game_props_frame.empty else game_props_frame
+    render_prop_table(batters, "mlb_active_batters")
+
+
+def render_mlb_weather(data: DashboardData, selected_date: date) -> None:
+    st.markdown("### MLB Weather Today")
+    st.caption("Weather uses stored NWS context when available. Dome/roof status is shown only if a configured provider stores it.")
+    legend = st.columns(4)
+    labels = [("Clear", GREEN), ("Chance for Delay", YELLOW), ("Delay Likely", "#FB923C"), ("Postponement Likely", RED)]
+    for col, (label, color) in zip(legend, labels):
+        with col: kpi(label, "", "Weather risk legend", color)
+    games = league_games(data, "mlb", selected_date)
+    if games.empty:
+        empty_state("No MLB games are available for the selected date.")
+        return
+    cols = st.columns(2)
+    for idx, (_, game) in enumerate(games.iterrows()):
+        weather = game_weather(game)
+        risk = weather_risk(weather)
+        with cols[idx % 2]:
+            st.markdown(
+                f"""
+                <div class='panel'>
+                  <div class='teams'>{logo_html(game.get('away_abbr'), game.get('away_logo'))}<span>{game.get('away_abbr')}</span><span class='subtle'>@</span><span>{game.get('home_abbr')}</span>{logo_html(game.get('home_abbr'), game.get('home_logo'))}</div>
+                  <div class='subtle'>{game.get('start_est')} | {game.get('venue') or 'Stadium unavailable'}</div>
+                  <div style='margin-top:10px'><span class='chip'>Risk: {risk}</span><span class='chip'>Temp: {weather.get('temperature_f', 'Unavailable')}</span><span class='chip'>Precip: {weather.get('precipitation_probability', 'Unavailable')}%</span><span class='chip'>Wind: {weather.get('wind_direction', 'Unavailable')} {weather.get('wind_mph', 'Unavailable')} mph</span><span class='chip'>Roof: Unavailable</span></div>
+                </div>
+                """,
+                unsafe_allow_html=True,
             )
 
-    with st.expander("Runtime logs"):
-        st.code(load_log_tail(), language="log")
-    with st.expander("Backtester"):
-        try:
-            back_df, summary = Backtester().run_moneyline_backtest()
-            st.dataframe(pd.DataFrame([summary.__dict__]), use_container_width=True, hide_index=True)
-            if not back_df.empty:
-                fig = px.bar(back_df.head(100), x="selection", y="profit_units", color="won", title="Historical bet profit")
-                fig.update_layout(template="plotly_dark", paper_bgcolor=BG, plot_bgcolor=BG, height=420)
-                st.plotly_chart(fig, use_container_width=True)
-        except Exception as exc:
-            st.info(f"Backtest unavailable: {exc}")
+
+def render_nba_defensive_matchups(data: DashboardData, selected_date: date) -> None:
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.selectbox("Sort", ["Value", "Rank"], key="nba_dm_sort")
+    c2.selectbox("Range", ["Season", "Last 10", "Last 5", "Last 3"], key="nba_dm_range")
+    c3.selectbox("Position", ["All", "PG", "SG", "SF", "PF", "C"], key="nba_dm_pos")
+    c4.selectbox("Year", [str(est_now().year), str(est_now().year - 1)], key="nba_dm_year")
+    games = league_games(data, "nba", selected_date)
+    game_names = ["All Games", *games["matchup"].dropna().astype(str).tolist()] if not games.empty else ["All Games"]
+    c5.selectbox("Games", game_names, key="nba_dm_games")
+    st.caption("Ranking legend: green = favorable, yellow = average, red = difficult.")
+    cols = ["Team", "Pos", "Opposing Player", "Line", "L10 Avg", "L5 Avg", "H2H", "Points", "Rebounds", "Assists", "3PM", "Steals", "Blocks"]
+    props = league_props(data, "nba")
+    if props.empty:
+        st.dataframe(pd.DataFrame(columns=cols), use_container_width=True, hide_index=True)
+        empty_state("No NBA defensive matchup stats or props are stored yet.")
+        return
+    table = props.rename(columns={"team": "Team", "position": "Pos", "player_name": "Opposing Player", "point": "Line", "hit_rate_l10": "L10 Avg", "hit_rate_l5": "L5 Avg"}).copy()
+    table["H2H"] = "Unavailable"
+    for col in ["Points", "Rebounds", "Assists", "3PM", "Steals", "Blocks"]:
+        table[col] = table["current_season_hit_rate"]
+    st.dataframe(style_heatmap(safe_cols(table, cols), ["L10 Avg", "L5 Avg", "Points", "Rebounds", "Assists", "3PM", "Steals", "Blocks"]), use_container_width=True, hide_index=True, height=520)
+
+
+def render_nba_first_basket(data: DashboardData, selected_date: date) -> None:
+    games = league_games(data, "nba", selected_date)
+    game = render_game_carousel(games, "nba_fb_carousel")
+    if game is None:
+        return
+    render_game_summary(game, data)
+    st.radio("Range", ["Season", "Last 10", "Last 5", "Last 3", "H2H"], index=0, horizontal=True, key="nba_fb_range")
+    cols = ["Team", "Tip Win %", "First FG %", "First Point %", "First Three %", "Avg Shots to First FG", "Avg Shots to First 3PT"]
+    st.dataframe(pd.DataFrame(columns=cols), use_container_width=True, hide_index=True)
+    empty_state("First basket/tip data is not available from the stored providers yet. This module is wired to render it when real data exists.")
+
+
+def render_nba_team_stats(data: DashboardData) -> None:
+    st.radio("Stats", ["Team Stats", "Opponent Stats"], index=0, horizontal=True, key="nba_ts_scope")
+    st.radio("Mode", ["Per Game", "Total"], index=0, horizontal=True, key="nba_ts_mode")
+    c1, c2 = st.columns(2)
+    c1.selectbox("Range", ["Season", "Last 10", "Last 5", "Last 3"], key="nba_ts_range")
+    c2.selectbox("Year", [str(est_now().year), str(est_now().year - 1)], key="nba_ts_year")
+    cols = ["Team", "PTS", "FG%", "3PM", "3P%", "FT%", "REB", "OREB", "DREB", "AST", "STL", "BLK", "TO", "FBPTS", "PITP"]
+    st.download_button("Export CSV", pd.DataFrame(columns=cols).to_csv(index=False).encode(), "jarvis_nba_team_stats.csv")
+    st.dataframe(pd.DataFrame(columns=cols), use_container_width=True, hide_index=True)
+    empty_state("NBA team stat tables require a configured team-stat feed. No ranks are fabricated.")
+
+
+def render_injury_splits(data: DashboardData, league: str) -> None:
+    st.radio("View", ["Quick View", "Team View"], index=0, horizontal=True, key=f"{league}_inj_view")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.selectbox("Games", ["All Games"], key=f"{league}_inj_games")
+    c2.text_input("Team filter", key=f"{league}_inj_team")
+    c3.selectbox("Status", ["All", "Out", "Questionable", "Doubtful", "Day-To-Day"], key=f"{league}_inj_status")
+    c4.text_input("Players / combinations", key=f"{league}_inj_players")
+    frame = injury_splits_proxy(data, league)
+    st.dataframe(frame, use_container_width=True, hide_index=True)
+    if frame.empty:
+        empty_state("No injury records are stored for this league yet.")
+    else:
+        empty_state("Injury availability is real, but teammate split metrics are unavailable unless a configured stats feed stores them.")
+
+
+def render_odds_discrepancies(data: DashboardData, league: str) -> None:
+    render_odds_board(data, league=league)
+
+
+def render_mlb_projections(data: DashboardData, selected_date: date) -> None:
+    model = st.radio("Model", ["Model 1", "Model 2", "Consensus"], index=2, horizontal=True, key="mlb_proj_model")
+    st.caption(f"Selected date: {selected_date} | {model}")
+    frame = projection_cards(data, "mlb")
+    if frame.empty:
+        empty_state("No real MLB model output/backtest summary is stored yet. Showing odds/stat boards only where available.")
+        render_odds_discrepancies(data, "mlb")
+        return
+    cols = ["matchup", "start_est", "projected_away_score", "projected_home_score", "win_prob_home", "recommended_bet", "edge_pct", "confidence"]
+    st.dataframe(style_heatmap(safe_cols(frame, cols), ["win_prob_home", "edge_pct", "confidence"]), use_container_width=True, hide_index=True)
+
+
+def render_parlay_builder(data: DashboardData, league: str) -> None:
+    st.markdown("### Parlay Builder")
+    pool = league_strong_props(data, league)
+    c1, c2, c3 = st.columns(3)
+    prop_type = c1.selectbox("Leg type", PROP_TYPE_ORDER, key=f"{league}_parlay_type")
+    stake = c2.number_input("Stake", min_value=1.0, value=10.0, step=5.0, key=f"{league}_parlay_stake")
+    max_legs = c3.slider("Max legs", 2, 6, 3, key=f"{league}_parlay_legs")
+    if prop_type != "All" and not pool.empty:
+        pool = pool[pool["prop_type"].eq(prop_type)]
+    if pool.empty:
+        empty_state("No strong legs are available for parlays after conservative PF/realism/EV filters.")
+        return
+    suggestions = suggest_parlays(pool, min_legs=2, max_legs=max_legs, stake=stake, limit=8, prop_type="All")
+    if not suggestions.empty:
+        st.dataframe(suggestions.drop(columns=["leg_ids"], errors="ignore"), use_container_width=True, hide_index=True)
+    pool = pool.head(80).copy()
+    pool["label"] = pool.apply(lambda r: f"{r.get('player_name')} {r.get('prop_side')} {r.get('point')} {r.get('prop_type')} | {r.get('book_badge')} {r.get('price_american')} | PF {r.get('pf_score')}", axis=1)
+    chosen = st.multiselect("Manual add/remove legs", pool.index.tolist(), format_func=lambda idx: pool.loc[idx, "label"] if idx in pool.index else str(idx), key=f"{league}_manual_parlay")
+    legs = pool.loc[chosen].copy() if chosen else pd.DataFrame(columns=pool.columns)
+    summary = parlay_summary(legs, stake=stake)
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Legs", summary.get("legs", 0))
+    c2.metric("Combined Odds", summary.get("american_odds") or "N/A")
+    c3.metric("Estimated EV", f"{summary.get('ev', 0):+.2f}")
+    st.markdown(f"<div class='why'><b>WHY</b><br>{summary.get('why', 'No parlay selected.')}</div>", unsafe_allow_html=True)
+    if not legs.empty:
+        render_prop_table(legs, f"{league}_parlay_legs_table")
+
+
+def render_generic_tool(data: DashboardData, league: str, tool: str, selected_date: date) -> None:
+    if "Odds Discrepancies" == tool:
+        render_odds_discrepancies(data, league)
+    elif "Injury" in tool:
+        render_injury_splits(data, league)
+    elif tool in {"Player Props", "Shot Props"}:
+        render_player_props_page(data, league, f"{league}_{tool}")
+    elif tool in {"Weather", "Ballpark Weather"} and league == "mlb":
+        render_mlb_weather(data, selected_date)
+    elif tool == "Line Movement":
+        render_odds_discrepancies(data, league)
+    else:
+        empty_state(f"{tool} is ready for real provider output, but no matching stored dataset exists yet. Jarvis is intentionally not filling this with fake stats.")
+        render_player_props_page(data, league, f"{league}_{tool}_props")
+
+
+def render_league_tab(data: DashboardData, label: str, selected_date: date, sidebar_tool: str) -> None:
+    league = LEAGUE_TO_KEY[label]
+    games = league_games(data, league, selected_date)
+    props = league_props(data, league)
+    strong = league_strong_props(data, league)
+    c1, c2, c3, c4 = st.columns(4)
+    with c1: kpi(f"{label} Games", len(games), "Selected date/upcoming fallback", CYAN)
+    with c2: kpi("Props", len(props), "Odds API player markets", PURPLE)
+    with c3: kpi("Quick Picks", len(strong), "Filtered best bets only", GREEN)
+    with c4: kpi("Books", props["book_badge"].nunique() if not props.empty else 0, "Text badges, no copied logos", YELLOW)
+
+    page_tabs = st.tabs(["Home", "Player Props", "Quick Picks", "Parlay Builder", "Tool Page"])
+    with page_tabs[0]:
+        game = render_game_carousel(games, f"{league}_home_carousel")
+        if game is not None:
+            render_game_summary(game, data)
+            st.markdown("### Live Odds")
+            render_odds_board(data, game_id=game.get("id"))
+            st.markdown("### Game Props")
+            render_prop_table(game_props(data, game.get("id")), f"{league}_home_game_props")
+    with page_tabs[1]:
+        render_player_props_page(data, league, f"{league}_props")
+    with page_tabs[2]:
+        render_best_bets(data, league)
+    with page_tabs[3]:
+        render_parlay_builder(data, league)
+    with page_tabs[4]:
+        if label == "MLB" and sidebar_tool == "HR Matchups":
+            render_mlb_hr_matchups(data, selected_date)
+        elif label == "MLB" and sidebar_tool == "Ballpark Weather":
+            render_mlb_weather(data, selected_date)
+        elif label == "MLB" and sidebar_tool == "Projections":
+            render_mlb_projections(data, selected_date)
+        elif label == "NBA" and sidebar_tool == "Defensive Matchups":
+            render_nba_defensive_matchups(data, selected_date)
+        elif label == "NBA" and sidebar_tool == "First Basket":
+            render_nba_first_basket(data, selected_date)
+        elif label == "NBA" and sidebar_tool == "Team Stats":
+            render_nba_team_stats(data)
+        elif label == "NBA" and sidebar_tool == "Injury Splits":
+            render_injury_splits(data, league)
+        else:
+            render_generic_tool(data, league, sidebar_tool, selected_date)
+
+
+def sidebar_controls() -> tuple[date, str, str]:
+    st.sidebar.markdown("## Jarvis Tools")
+    st.sidebar.caption("League nav on top, dense research tools on the left. Auto-refresh is hourly only.")
+    selected_date = st.sidebar.date_input("Date", value=est_now().date())
+    sidebar_league = st.sidebar.radio("Sidebar sport", LEAGUES, horizontal=True)
+    tool = st.sidebar.selectbox("Tool navigation", SIDEBAR_TOOLS[sidebar_league])
+    st.sidebar.markdown("### Global Filters")
+    st.sidebar.text_input("Search player/team", key="global_search_hint", placeholder="Use table search boxes per page")
+    st.sidebar.selectbox("Default prop type", PROP_TYPE_ORDER, key="global_prop_type_hint")
+    st.sidebar.toggle("Show alternate lines by default", value=False, key="global_alt_hint")
+    return selected_date, sidebar_league, tool
+
+
+def refresh_button() -> None:
+    if st.sidebar.button("Refresh Data", type="primary", use_container_width=True):
+        with st.spinner("Refreshing configured providers..."):
+            try:
+                SportsDataIngestionService().ingest_all_primary_sports()
+                clear_service_cache()
+                st.cache_data.clear()
+                st.success("Data refresh complete.")
+            except Exception as exc:
+                st.error(f"Refresh failed: {exc}")
+        st.rerun()
+    if st.sidebar.button("Clear App Cache", use_container_width=True):
+        clear_service_cache()
+        st.cache_data.clear()
+        st.rerun()
+
+
+def main() -> None:
+    set_page()
+    hourly_refresh()
+    selected_date, sidebar_league, sidebar_tool = sidebar_controls()
+    refresh_button()
+
+    with st.spinner("Loading Jarvis research board..."):
+        data = load_dashboard_data()
+
+    render_top_shell(selected_date, data)
+    st.caption(f"Sidebar context: {sidebar_league} / {sidebar_tool}. Use the top league tabs to switch the main board.")
+
+    top_tabs = st.tabs(LEAGUES)
+    for tab, label in zip(top_tabs, LEAGUES):
+        with tab:
+            active_tool = sidebar_tool if sidebar_league == label else SIDEBAR_TOOLS[label][0]
+            render_league_tab(data, label, selected_date, active_tool)
+
+    with st.expander("System Logs"):
+        path = LOG_FILE
+        if path.exists():
+            st.code("".join(path.read_text(encoding="utf-8", errors="ignore").splitlines(True)[-160:]), language="log")
+        else:
+            st.info("No log file yet.")
+
+    st.markdown(
+        "<div class='footer-note'>Jarvis Betting is a research tool. Data may be delayed or incomplete. No betting outcome is guaranteed. Bet responsibly.</div>",
+        unsafe_allow_html=True,
+    )
 
 
 if __name__ == "__main__":

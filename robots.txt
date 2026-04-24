@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://celebrationeventvenue.com/sitemap.xml
+Sitemap: /sitemap.xml
