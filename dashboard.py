@@ -66,7 +66,7 @@ SPORT_TABS = [
 ]
 
 GAME_ODDS_COLUMNS = ["bookmaker", "market", "selection_name", "point", "price_american", "implied_probability", "best_line", "sharp_book", "pulled_at_est"]
-PROP_DISPLAY_COLUMNS = ["pf_score", "realism_score", "prop_type", "player_name", "market_display", "prop_side", "point", "projected_line", "line_delta", "bookmaker", "price_american", "display_edge_pct", "confidence", "hit_rate_l5", "hit_rate_l10", "variance_flag", "why"]
+PROP_DISPLAY_COLUMNS = ["pf_score", "realism_score", "prop_type", "player_name", "market_display", "prop_side", "point", "projected_line", "line_delta", "bookmaker", "price_american", "display_edge_pct", "confidence", "weather_impact", "injury_flag", "sharp_edge_vs_pinnacle", "hit_rate_l5", "hit_rate_l10", "variance_flag", "why"]
 SHARP_COLUMNS = ["league", "matchup", "sportsbook", "market", "selection_name", "opening_price", "current_price", "opening_point", "current_point", "movement_abs", "sharp_score", "why"]
 
 
@@ -164,6 +164,21 @@ def preprocess(games: pd.DataFrame, projections: pd.DataFrame, odds: pd.DataFram
     injuries["reported_at_est"] = convert_series_to_est(injuries["reported_at"]) if not injuries.empty else pd.Series(dtype="datetime64[ns, America/New_York]")
     moves["detected_at_est"] = convert_series_to_est(moves["detected_at"]) if not moves.empty else pd.Series(dtype="datetime64[ns, America/New_York]")
     return games, projections, odds, injuries, moves
+
+
+def apply_context_filters(props: pd.DataFrame, healthy_only: bool, wind_adjusted_only: bool, sharp_edge_only: bool) -> pd.DataFrame:
+    props = safe_table(props, PROP_COLUMNS, {"injury_flag": False, "weather_impact": 0.0, "sharp_confirmed": True, "sharp_edge_vs_pinnacle": pd.NA})
+    if props.empty:
+        return props
+    filtered = props.copy()
+    if healthy_only:
+        filtered = filtered[filtered["injury_flag"].fillna(False) == False]
+    if wind_adjusted_only:
+        filtered = filtered[pd.to_numeric(filtered["weather_impact"], errors="coerce").fillna(0).abs() > 0]
+    if sharp_edge_only:
+        filtered = filtered[filtered["sharp_confirmed"].fillna(False) == True]
+        filtered = filtered[filtered["sharp_edge_vs_pinnacle"].isna() | (pd.to_numeric(filtered["sharp_edge_vs_pinnacle"], errors="coerce") > 0)]
+    return filtered
 
 
 def sport_frames(league: str, games: pd.DataFrame, odds: pd.DataFrame, injuries: pd.DataFrame, moves: pd.DataFrame, props: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -491,6 +506,10 @@ def main() -> None:
     st.sidebar.markdown("## Controls")
     st.sidebar.caption("Manual refresh or hourly auto-refresh only. All times are EST/ET.")
     global_prop_type = st.sidebar.selectbox("Global Prop Type", PROP_TYPE_ORDER, index=0)
+    st.sidebar.markdown("### Context Filters")
+    healthy_only = st.sidebar.checkbox("Show Only Healthy Players", value=True)
+    wind_adjusted_only = st.sidebar.checkbox("Wind / Weather Adjusted Only", value=False)
+    sharp_edge_only = st.sidebar.checkbox("Require Sharp-Book Edge", value=True)
     stake = st.sidebar.number_input("Parlay stake", min_value=1.0, max_value=10000.0, value=10.0, step=5.0)
     leg_count = st.sidebar.slider("Max parlay legs", 2, 6, 3, 1)
     st.sidebar.markdown(f"PF threshold: **{STRONG_PF_MIN}+**")
@@ -512,7 +531,8 @@ def main() -> None:
     games, projections, odds, injuries, moves = preprocess(*load_data())
     social = load_social_trends()
     props = build_player_props_frame(odds, games, injuries_df=injuries, social_df=social)
-    props = safe_table(props, PROP_COLUMNS, {"pf_score": 0, "edge_pct": 0.0, "display_edge_pct": 0.0, "confidence": 0.0, "realism_score": 0})
+    props = safe_table(props, PROP_COLUMNS, {"pf_score": 0, "edge_pct": 0.0, "display_edge_pct": 0.0, "confidence": 0.0, "realism_score": 0, "weather_impact": 0.0, "injury_flag": False, "sharp_confirmed": True})
+    props = apply_context_filters(props, healthy_only=healthy_only, wind_adjusted_only=wind_adjusted_only, sharp_edge_only=sharp_edge_only)
     filtered_for_header = get_props_by_type(props, global_prop_type)
 
     st.markdown(
@@ -524,6 +544,8 @@ def main() -> None:
             <span class='pill'>PF {STRONG_PF_MIN}+ only</span>
             <span class='pill'>Displayed edge capped at {MAX_DISPLAY_EDGE:.0%}</span>
             <span class='pill'>Strong picks: {len(strong_props(filtered_for_header))}</span>
+            <span class='pill'>Healthy only: {healthy_only}</span>
+            <span class='pill'>Sharp edge required: {sharp_edge_only}</span>
         </div>
         """,
         unsafe_allow_html=True,

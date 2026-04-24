@@ -14,9 +14,11 @@ Verified integrations:
 
 from __future__ import annotations
 
+import json
 import os
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -29,6 +31,7 @@ from requests import Response
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from config import (
+    DATA_DIR,
     API_FOOTBALL_DEFAULTS,
     API_SPORTS_FOOTBALL_BASE_URL,
     API_SPORTS_KEY,
@@ -103,6 +106,77 @@ PARLAY_SEARCH_TERMS = [
     "player props", "points rebounds assists", "home run prop", "rbis prop", "strikeouts prop",
     "3pm prop", "first basket", "anytime touchdown", "goals prop", "shots on goal",
 ]
+
+
+WEATHER_CONTEXT_PATH = DATA_DIR / "weather_context.json"
+INJURY_CONTEXT_PATH = DATA_DIR / "injury_context.json"
+
+# Coordinates are approximate stadium/arena locations used for public NWS point forecasts.
+# NWS base URL verification: https://api.weather.gov; documented /points/{lat},{lon} -> forecastHourly.
+VENUE_COORDS_BY_TEAM: dict[str, tuple[float, float]] = {
+    "Arizona Diamondbacks": (33.4455, -112.0667),
+    "Atlanta Braves": (33.8908, -84.4678),
+    "Baltimore Orioles": (39.2840, -76.6217),
+    "Boston Red Sox": (42.3467, -71.0972),
+    "Chicago Cubs": (41.9484, -87.6553),
+    "Chicago White Sox": (41.8300, -87.6339),
+    "Cincinnati Reds": (39.0979, -84.5082),
+    "Cleveland Guardians": (41.4962, -81.6852),
+    "Colorado Rockies": (39.7561, -104.9942),
+    "Detroit Tigers": (42.3390, -83.0485),
+    "Houston Astros": (29.7573, -95.3555),
+    "Kansas City Royals": (39.0517, -94.4803),
+    "Los Angeles Angels": (33.8003, -117.8827),
+    "Los Angeles Dodgers": (34.0739, -118.2400),
+    "Miami Marlins": (25.7781, -80.2197),
+    "Milwaukee Brewers": (43.0280, -87.9712),
+    "Minnesota Twins": (44.9817, -93.2776),
+    "New York Mets": (40.7571, -73.8458),
+    "New York Yankees": (40.8296, -73.9262),
+    "Oakland Athletics": (37.7516, -122.2005),
+    "Philadelphia Phillies": (39.9061, -75.1665),
+    "Pittsburgh Pirates": (40.4469, -80.0057),
+    "San Diego Padres": (32.7073, -117.1566),
+    "San Francisco Giants": (37.7786, -122.3893),
+    "Seattle Mariners": (47.5914, -122.3325),
+    "St. Louis Cardinals": (38.6226, -90.1928),
+    "Tampa Bay Rays": (27.7682, -82.6534),
+    "Texas Rangers": (32.7473, -97.0842),
+    "Toronto Blue Jays": (43.6414, -79.3894),
+    "Washington Nationals": (38.8730, -77.0074),
+    "Buffalo Bills": (42.7738, -78.7869),
+    "Chicago Bears": (41.8623, -87.6167),
+    "Cleveland Browns": (41.5061, -81.6995),
+    "Green Bay Packers": (44.5013, -88.0622),
+    "Kansas City Chiefs": (39.0490, -94.4839),
+    "New England Patriots": (42.0909, -71.2643),
+    "New York Giants": (40.8135, -74.0745),
+    "New York Jets": (40.8135, -74.0745),
+    "Philadelphia Eagles": (39.9008, -75.1675),
+    "Pittsburgh Steelers": (40.4468, -80.0158),
+    "Seattle Seahawks": (47.5952, -122.3316),
+}
+
+ROTOWIRE_INJURY_URLS: dict[str, str] = {
+    "mlb": "https://www.rotowire.com/baseball/injury-report.php",
+    "nba": "https://www.rotowire.com/basketball/injury-report.php",
+    "nfl": "https://www.rotowire.com/football/injury-report.php",
+    "nhl": "https://www.rotowire.com/hockey/injury-report.php",
+}
+
+
+def _write_context_json(path: Path, payload: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+
+
+def _read_context_json(path: Path) -> dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
 
 
 class APIRequestError(RuntimeError):
@@ -232,6 +306,46 @@ class XTrendsClient:
         return pd.DataFrame(rows)
 
 
+class WeatherClient(BaseAPIClient):
+    """National Weather Service client.
+
+    Base URL: https://api.weather.gov
+    Verification note: official docs confirm /points/{lat},{lon} returns forecastHourly links.
+    """
+
+    def __init__(self) -> None:
+        super().__init__("https://api.weather.gov", headers={"User-Agent": "Jarvis_Betting/1.0 contact: local"}, min_interval_seconds=1.0)
+
+    def hourly_forecast_for_point(self, lat: float, lon: float) -> dict[str, Any]:
+        point = self.get_json(f"points/{lat:.4f},{lon:.4f}")
+        hourly_url = (point.get("properties") or {}).get("forecastHourly")
+        if not hourly_url:
+            return {}
+        response = self._request("GET", hourly_url)
+        return response.json()
+
+    @staticmethod
+    def summarize_hourly_forecast(payload: dict[str, Any]) -> dict[str, Any]:
+        periods = (payload.get("properties") or {}).get("periods") or []
+        if not periods:
+            return {"weather_available": False}
+        first = periods[0]
+        wind_speed = str(first.get("windSpeed") or "0 mph")
+        wind_mph = safe_float(wind_speed.split()[0]) or 0.0
+        probability = first.get("probabilityOfPrecipitation") or {}
+        return {
+            "weather_available": True,
+            "temperature_f": safe_float(first.get("temperature")),
+            "wind_mph": wind_mph,
+            "wind_direction": first.get("windDirection"),
+            "precipitation_probability": safe_float(probability.get("value")) or 0.0,
+            "humidity": None,
+            "short_forecast": first.get("shortForecast"),
+            "start_time": first.get("startTime"),
+            "source": "api.weather.gov",
+        }
+
+
 class MLBStatcastClient:
     @staticmethod
     def fetch_statcast_window(start_date: str, end_date: str) -> pd.DataFrame:
@@ -256,6 +370,7 @@ class SportsDataIngestionService:
         self.api_football = APISportsFootballClient()
         self.thesportsdb = TheSportsDBClient()
         self.x_trends = XTrendsClient()
+        self.weather = WeatherClient()
 
     @staticmethod
     def _parse_dt(value: str | None) -> datetime | None:
@@ -409,6 +524,109 @@ class SportsDataIngestionService:
     def fetch_social_trends(self) -> pd.DataFrame:
         return self.x_trends.search_popular_props()
 
+
+    def poll_weather_context(self) -> dict[str, Any]:
+        """Fetch NWS weather context for stored games with known venue/team coordinates."""
+        context: dict[str, Any] = _read_context_json(WEATHER_CONTEXT_PATH)
+        with get_session() as session:
+            games = session.query(Game).filter(Game.completed == False).all()  # noqa: E712
+            for game in games:
+                team_name = game.home_team or game.away_team
+                coords = VENUE_COORDS_BY_TEAM.get(team_name)
+                if coords is None:
+                    continue
+                lat, lon = coords
+                try:
+                    forecast = self.weather.hourly_forecast_for_point(lat, lon)
+                    summary = self.weather.summarize_hourly_forecast(forecast)
+                except Exception as exc:
+                    LOGGER.warning("Weather fetch failed for %s: %s", team_name, exc)
+                    summary = {"weather_available": False, "error": str(exc), "source": "api.weather.gov"}
+                summary["team"] = team_name
+                summary["game_id"] = game.external_game_id
+                summary["updated_at"] = utcnow().isoformat()
+                context[str(game.id)] = summary
+                raw = game.raw_json if isinstance(game.raw_json, dict) else {}
+                raw["weather_context"] = summary
+                game.raw_json = raw
+        _write_context_json(WEATHER_CONTEXT_PATH, context)
+        return context
+
+    def poll_rotowire_injuries(self, sport_key: str) -> list[dict[str, Any]]:
+        """Light public scrape of Rotowire injury pages.
+
+        Rotowire pages are public web pages. The table data may be rendered client-side,
+        so this parser records conservative text-level matches and never fabricates rows.
+        """
+        url = ROTOWIRE_INJURY_URLS.get(sport_key)
+        if not url:
+            return []
+        try:
+            response = requests.get(url, timeout=20, headers={"User-Agent": "Jarvis_Betting/1.0"})
+            response.raise_for_status()
+        except Exception as exc:
+            LOGGER.warning("Rotowire injury fetch failed for %s: %s", sport_key, exc)
+            return []
+        soup = BeautifulSoup(response.text, "html.parser")
+        text = " ".join(soup.get_text(" ", strip=True).split())
+        rows: list[dict[str, Any]] = []
+        for status in ["Out", "Doubtful", "Questionable", "Probable", "Day-To-Day", "Injured Reserve"]:
+            if status.lower() in text.lower():
+                rows.append({"sport_key": sport_key, "player_name": None, "team": None, "status": status, "reason": "Rotowire public injury page mentions this status", "source": url, "updated_at": utcnow().isoformat()})
+        return rows
+
+    def ingest_scoreboard_injuries(self, sport_key: str) -> int:
+        """Parse injuries if ESPN scoreboard payload includes competitor injury arrays."""
+        if sport_key not in EXTENDED_SPORT_CONFIG:
+            return 0
+        try:
+            payload = self.espn.fetch_scoreboard(sport_key)
+        except Exception as exc:
+            LOGGER.warning("ESPN injury payload unavailable for %s: %s", sport_key, exc)
+            return 0
+        cfg = EXTENDED_SPORT_CONFIG[sport_key]
+        inserted = 0
+        with get_session() as session:
+            for event in payload.get("events", []):
+                comp = (event.get("competitions") or [{}])[0]
+                for competitor in comp.get("competitors", []) or []:
+                    team = (competitor.get("team") or {}).get("displayName")
+                    for injury in competitor.get("injuries", []) or []:
+                        athlete = injury.get("athlete") or {}
+                        player_name = athlete.get("displayName") or athlete.get("fullName")
+                        if not player_name:
+                            continue
+                        session.add(Injury(
+                            external_injury_id=str(athlete.get("id")) if athlete.get("id") else None,
+                            sport=cfg["sport"],
+                            league=cfg["league"],
+                            game_id=None,
+                            player_id=None,
+                            team=team,
+                            player_name=player_name,
+                            status=injury.get("status") or injury.get("type"),
+                            injury_type=injury.get("type"),
+                            reason=injury.get("detail") or injury.get("description"),
+                            source="espn-scoreboard",
+                            raw_json=injury,
+                        ))
+                        inserted += 1
+        return inserted
+
+    def poll_external_context(self) -> dict[str, Any]:
+        """Refresh weather and public injury context without requiring schema changes."""
+        weather = self.poll_weather_context()
+        injury_context: dict[str, Any] = _read_context_json(INJURY_CONTEXT_PATH)
+        for sport_key in ["mlb", "nba", "nfl", "nhl"]:
+            injury_context[sport_key] = self.poll_rotowire_injuries(sport_key)
+            try:
+                injury_context[f"{sport_key}_espn_rows"] = self.ingest_scoreboard_injuries(sport_key)
+            except Exception as exc:
+                LOGGER.warning("ESPN injury ingest failed for %s: %s", sport_key, exc)
+        injury_context["updated_at"] = utcnow().isoformat()
+        _write_context_json(INJURY_CONTEXT_PATH, injury_context)
+        return {"weather": weather, "injuries": injury_context}
+
     def ingest_all_primary_sports(self) -> dict[str, int]:
         init_db()
         results: dict[str, int] = {}
@@ -428,6 +646,11 @@ class SportsDataIngestionService:
             results["soccer_injuries"] = self.ingest_soccer_injuries()
         except Exception as exc:
             LOGGER.warning("Soccer injury ingest skipped: %s", exc)
+        try:
+            context = self.poll_external_context()
+            results["weather_context_games"] = len(context.get("weather", {}))
+        except Exception as exc:
+            LOGGER.warning("External context refresh skipped: %s", exc)
         return results
 
     def build_feature_frames(self) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:

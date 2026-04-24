@@ -1,0 +1,141 @@
+{
+  "mlb": [
+    {
+      "sport_key": "mlb",
+      "player_name": null,
+      "team": null,
+      "status": "Out",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/baseball/injury-report.php",
+      "updated_at": "2026-04-24T06:34:54.624244+00:00"
+    },
+    {
+      "sport_key": "mlb",
+      "player_name": null,
+      "team": null,
+      "status": "Probable",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/baseball/injury-report.php",
+      "updated_at": "2026-04-24T06:34:54.624451+00:00"
+    },
+    {
+      "sport_key": "mlb",
+      "player_name": null,
+      "team": null,
+      "status": "Day-To-Day",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/baseball/injury-report.php",
+      "updated_at": "2026-04-24T06:34:54.624516+00:00"
+    }
+  ],
+  "mlb_espn_rows": 0,
+  "nba": [
+    {
+      "sport_key": "nba",
+      "player_name": null,
+      "team": null,
+      "status": "Out",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/basketball/injury-report.php",
+      "updated_at": "2026-04-24T06:34:55.146695+00:00"
+    },
+    {
+      "sport_key": "nba",
+      "player_name": null,
+      "team": null,
+      "status": "Doubtful",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/basketball/injury-report.php",
+      "updated_at": "2026-04-24T06:34:55.146771+00:00"
+    },
+    {
+      "sport_key": "nba",
+      "player_name": null,
+      "team": null,
+      "status": "Questionable",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/basketball/injury-report.php",
+      "updated_at": "2026-04-24T06:34:55.146829+00:00"
+    },
+    {
+      "sport_key": "nba",
+      "player_name": null,
+      "team": null,
+      "status": "Probable",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/basketball/injury-report.php",
+      "updated_at": "2026-04-24T06:34:55.146880+00:00"
+    }
+  ],
+  "nba_espn_rows": 0,
+  "nfl": [
+    {
+      "sport_key": "nfl",
+      "player_name": null,
+      "team": null,
+      "status": "Out",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/football/injury-report.php",
+      "updated_at": "2026-04-24T06:34:55.702034+00:00"
+    },
+    {
+      "sport_key": "nfl",
+      "player_name": null,
+      "team": null,
+      "status": "Doubtful",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/football/injury-report.php",
+      "updated_at": "2026-04-24T06:34:55.702104+00:00"
+    },
+    {
+      "sport_key": "nfl",
+      "player_name": null,
+      "team": null,
+      "status": "Questionable",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/football/injury-report.php",
+      "updated_at": "2026-04-24T06:34:55.702152+00:00"
+    },
+    {
+      "sport_key": "nfl",
+      "player_name": null,
+      "team": null,
+      "status": "Probable",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/football/injury-report.php",
+      "updated_at": "2026-04-24T06:34:55.702196+00:00"
+    },
+    {
+      "sport_key": "nfl",
+      "player_name": null,
+      "team": null,
+      "status": "Injured Reserve",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/football/injury-report.php",
+      "updated_at": "2026-04-24T06:34:55.702294+00:00"
+    }
+  ],
+  "nfl_espn_rows": 0,
+  "nhl": [
+    {
+      "sport_key": "nhl",
+      "player_name": null,
+      "team": null,
+      "status": "Out",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/hockey/injury-report.php",
+      "updated_at": "2026-04-24T06:34:56.276731+00:00"
+    },
+    {
+      "sport_key": "nhl",
+      "player_name": null,
+      "team": null,
+      "status": "Probable",
+      "reason": "Rotowire public injury page mentions this status",
+      "source": "https://www.rotowire.com/hockey/injury-report.php",
+      "updated_at": "2026-04-24T06:34:56.276860+00:00"
+    }
+  ],
+  "nhl_espn_rows": 0,
+  "updated_at": "2026-04-24T06:34:56.278016+00:00"
+}

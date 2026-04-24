@@ -388,3 +388,297 @@ Traceback (most recent call last):
     raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
 APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/soccer_epl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
 
+2026-04-24 02:33:26 | ERROR | jarvis_betting | Ingestion failed for nfl: HTTP 401 from https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 640, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 475, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 247, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 225, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 215, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 02:33:34 | ERROR | jarvis_betting | Ingestion failed for nba: HTTP 401 from https://api.the-odds-api.com/v4/sports/basketball_nba/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 640, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 475, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 247, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 225, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 215, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/basketball_nba/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 02:33:42 | ERROR | jarvis_betting | Ingestion failed for mlb: HTTP 401 from https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 640, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 475, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 247, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 225, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 215, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 02:33:50 | ERROR | jarvis_betting | Ingestion failed for nhl: HTTP 401 from https://api.the-odds-api.com/v4/sports/icehockey_nhl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 640, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 475, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 247, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 225, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 215, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/icehockey_nhl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 02:33:58 | ERROR | jarvis_betting | Ingestion failed for ncaaf: HTTP 401 from https://api.the-odds-api.com/v4/sports/americanfootball_ncaaf/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 640, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 475, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 247, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 225, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 215, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/americanfootball_ncaaf/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 02:34:06 | ERROR | jarvis_betting | Ingestion failed for wnba: HTTP 401 from https://api.the-odds-api.com/v4/sports/basketball_wnba/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 640, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 475, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 247, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 225, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 215, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/basketball_wnba/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 02:34:14 | ERROR | jarvis_betting | Ingestion failed for soccer_epl: HTTP 401 from https://api.the-odds-api.com/v4/sports/soccer_epl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 640, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 475, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 247, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 225, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 215, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/soccer_epl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 02:34:27 | WARNING | jarvis_betting | Weather fetch failed for Toronto Blue Jays: HTTP 404 from https://api.weather.gov/points/43.6414,-79.3894: {
+    "correlationId": "44974cc",
+    "title": "Data Unavailable For Requested Point",
+    "type": "https://api.weather.gov/problems/InvalidPoint",
+    "status": 404,
+    "detail": "Unable to provide data for requested point 43.6414,-79.3894",
+    "i

@@ -28,6 +28,17 @@ REASONABLE_ALT_MAX_DELTA = 8.0
 MIN_REALISM_SCORE = 62
 LONGSHOT_CONFIDENCE_MIN = 0.72
 LONGSHOT_EDGE_MIN = 0.08
+WEATHER_SENSITIVE_PROP_TYPES = {
+    "Homeruns",
+    "Hits",
+    "Bases / Total Bases",
+    "RBIs",
+    "Passing",
+    "Receiving",
+    "Rushing",
+    "Goals",
+    "Shots / Saves",
+}
 
 PROP_TYPE_ORDER = [
     "All",
@@ -56,7 +67,9 @@ PROP_COLUMNS = [
     "implied_probability", "market_probability", "projected_probability", "edge_pct", "display_edge_pct",
     "confidence", "pf_score", "realism_score", "variance_flag", "hit_rate_l5", "hit_rate_l10", "book_count",
     "sharp_prob", "sharp_point", "sharp_books", "social_score", "social_mentions", "injury_flag",
-    "best_available", "positive_ev", "reasonable_line", "strong_pick", "why", "raw_json", "pulled_at",
+    "injury_note", "weather_impact", "weather_note", "trend_note", "sharp_edge_vs_pinnacle",
+    "sharp_confirmed", "line_movement_signal", "best_available", "positive_ev", "reasonable_line",
+    "strong_pick", "why", "raw_json", "pulled_at",
 ]
 
 
@@ -210,6 +223,87 @@ def calculate_realism_score(row: pd.Series) -> int:
     return int(round(clamp(score, 0, 100)))
 
 
+def _context_from_game_raw(row: pd.Series) -> dict[str, Any]:
+    raw = safe_json_loads(row.get("raw_json_game"))
+    if not raw:
+        raw = safe_json_loads(row.get("game_raw_json"))
+    return raw if isinstance(raw, dict) else {}
+
+
+def _weather_context(row: pd.Series) -> dict[str, Any]:
+    raw = _context_from_game_raw(row)
+    context = raw.get("weather_context") or raw.get("weather") or {}
+    return context if isinstance(context, dict) else {}
+
+
+def weather_adjustment(row: pd.Series) -> tuple[float, str]:
+    prop_type = str(row.get("prop_type") or "Other")
+    if prop_type not in WEATHER_SENSITIVE_PROP_TYPES:
+        return 0.0, "Weather neutral for this prop type"
+    weather = _weather_context(row)
+    if not weather:
+        return 0.0, "Weather unavailable"
+    wind_mph = safe_float(weather.get("wind_mph")) or 0.0
+    temperature = safe_float(weather.get("temperature_f"))
+    precipitation = safe_float(weather.get("precipitation_probability")) or 0.0
+    wind_direction = str(weather.get("wind_direction") or "").lower()
+    short_forecast = str(weather.get("short_forecast") or "").lower()
+    impact = 0.0
+    notes: list[str] = []
+    if prop_type in {"Homeruns", "Hits", "Bases / Total Bases", "RBIs"}:
+        if wind_mph >= 8 and any(token in wind_direction for token in ["out", "s", "sw", "w"]):
+            impact += 0.012
+            notes.append(f"{wind_mph:.0f}mph wind helps carry")
+        elif wind_mph >= 8:
+            impact -= 0.014
+            notes.append(f"{wind_mph:.0f}mph wind suppresses carry")
+        if temperature is not None and temperature >= 78:
+            impact += 0.006
+            notes.append("warm hitting weather")
+        if precipitation >= 35 or "rain" in short_forecast:
+            impact -= 0.010
+            notes.append("rain risk")
+    elif prop_type in {"Passing", "Receiving", "Rushing", "Goals", "Shots / Saves"}:
+        if wind_mph >= 15:
+            impact -= 0.010
+            notes.append(f"{wind_mph:.0f}mph wind adds variance")
+        if precipitation >= 35 or "rain" in short_forecast or "snow" in short_forecast:
+            impact -= 0.008
+            notes.append("precipitation risk")
+    return clamp(impact, -0.035, 0.025), "; ".join(notes) if notes else "Weather checked, no major adjustment"
+
+
+def trend_adjustment(row: pd.Series) -> tuple[float, str]:
+    social_score = safe_float(row.get("social_score")) or 0.0
+    book_count = safe_float(row.get("book_count")) or 0.0
+    hit_rate_l10 = safe_float(row.get("hit_rate_l10")) or 0.50
+    impact = 0.0
+    notes: list[str] = []
+    if book_count >= 5:
+        impact += 0.003
+        notes.append("broad book coverage")
+    if social_score >= 35:
+        impact += 0.003
+        notes.append("public trend signal")
+    if hit_rate_l10 >= 0.58:
+        impact += 0.004
+        notes.append("recent form supports")
+    elif hit_rate_l10 <= 0.45:
+        impact -= 0.006
+        notes.append("recent form weak")
+    return clamp(impact, -0.015, 0.012), "; ".join(notes) if notes else "No strong recent trend signal"
+
+
+def line_movement_adjustment(row: pd.Series) -> tuple[float, str]:
+    raw = safe_json_loads(row.get("raw_json"))
+    movement = safe_float(raw.get("line_movement_signal")) or safe_float(row.get("line_movement_signal")) or 0.0
+    if movement >= 20:
+        return 0.010, "strong positive line movement"
+    if movement >= 8:
+        return 0.004, "modest line movement"
+    return 0.0, "No strong line movement"
+
+
 class FeatureBuilder:
     @staticmethod
     def _latest_moneyline_snapshot(odds_df: pd.DataFrame) -> pd.DataFrame:
@@ -343,7 +437,7 @@ def build_player_props_frame(odds_df: pd.DataFrame, games_df: pd.DataFrame, inju
     props["implied_probability"] = pd.to_numeric(props["implied_probability"], errors="coerce").fillna(0.50)
     props["is_sharp_book"] = props["bookmaker"].apply(is_sharp_book)
     latest = props.sort_values("pulled_at").groupby(["game_id", "bookmaker", "market", "player_name", "prop_side", "point"], dropna=False).tail(1)
-    latest = latest.merge(games_df[["id", "sport", "league", "home_team", "away_team", "commence_time", "status", "completed"]], left_on="game_id", right_on="id", how="left", suffixes=("", "_game"))
+    latest = latest.merge(games_df[["id", "sport", "league", "home_team", "away_team", "commence_time", "status", "completed", "raw_json"]], left_on="game_id", right_on="id", how="left", suffixes=("", "_game"))
     if "sport_game" in latest:
         latest["sport"] = latest["sport"].fillna(latest["sport_game"])
     if "league_game" in latest:
@@ -379,8 +473,20 @@ def build_player_props_frame(odds_df: pd.DataFrame, games_df: pd.DataFrame, inju
     social_boost = latest["social_score"].clip(0, 100) / 5000.0
     side_sign = np.where(latest["prop_side"].isin(["Over", "Yes"]), 1, -1)
     latest["projected_probability"] = latest["consensus_prob"].fillna(0.50) + base_bias * side_sign + sharp_delta * 0.18 + social_boost
+    weather_results = latest.apply(weather_adjustment, axis=1)
+    trend_results = latest.apply(trend_adjustment, axis=1)
+    movement_results = latest.apply(line_movement_adjustment, axis=1)
+    latest["weather_impact"] = [item[0] for item in weather_results]
+    latest["weather_note"] = [item[1] for item in weather_results]
+    latest["trend_note"] = [item[1] for item in trend_results]
+    latest["line_movement_signal"] = [item[1] for item in movement_results]
+    latest["injury_note"] = np.where(latest["injury_flag"], "Player appears on stored injury report", "No stored injury flag")
+    injury_penalty = np.where(latest["injury_flag"], -0.060, 0.0)
+    latest["projected_probability"] = latest["projected_probability"] + latest["weather_impact"] + [item[0] for item in trend_results] + [item[0] for item in movement_results] + injury_penalty
     latest["projected_probability"] = latest["projected_probability"].apply(lambda value: clamp(float(value), 0.05, 0.92))
     latest["market_probability"] = latest["implied_probability"].fillna(0.50)
+    latest["sharp_edge_vs_pinnacle"] = latest["projected_probability"] - latest["sharp_prob"]
+    latest["sharp_confirmed"] = latest["sharp_prob"].isna() | (latest["sharp_edge_vs_pinnacle"] > 0)
     raw_edge = latest["projected_probability"] - latest["market_probability"]
     latest["edge_pct"] = raw_edge.clip(-MAX_DISPLAY_EDGE, MAX_DISPLAY_EDGE)
     latest["display_edge_pct"] = latest["edge_pct"]
@@ -400,6 +506,7 @@ def build_player_props_frame(odds_df: pd.DataFrame, games_df: pd.DataFrame, inju
         & (latest["confidence"] >= STRONG_CONFIDENCE_MIN)
         & (latest["realism_score"] >= MIN_REALISM_SCORE)
         & latest["reasonable_line"]
+        & latest["sharp_confirmed"]
     )
     latest["why"] = latest.apply(build_why_explanation, axis=1)
     latest["best_available"] = latest.groupby(["game_id", "market", "player_name", "prop_side"])["edge_pct"].transform("max") == latest["edge_pct"]
@@ -469,19 +576,25 @@ def build_why_explanation(row: pd.Series) -> str:
     line_delta = safe_float(row.get("line_delta")) or 0.0
     sharp_note = "sharp comp unavailable"
     if pd.notna(row.get("sharp_prob")):
-        sharp_note = f"sharp books ({row.get('sharp_books', 'available')}) imply {row.get('sharp_prob'):.1%}"
+        sharp_edge = safe_float(row.get("sharp_edge_vs_pinnacle")) or 0.0
+        sharp_note = f"sharp books ({row.get('sharp_books', 'available')}) edge {sharp_edge:+.1%}"
+    weather_note = str(row.get("weather_note") or "Weather unavailable")
+    injury_note = str(row.get("injury_note") or "No stored injury flag")
+    trend_note = str(row.get("trend_note") or "No strong trend signal")
+    movement_note = str(row.get("line_movement_signal") or "No line movement signal")
     risk_note = str(row.get("variance_flag") or "Main/reasonable line")
     if realism < MIN_REALISM_SCORE:
         risk_note = f"Filtered risk: {risk_note}"
     return (
-        f"Edge capped at {edge:.1%}; PF {pf_score}/100; Realism {realism}/100; confidence {confidence:.1%}. "
-        f"Line distance {line_delta:.1f} from market; L5/L10 estimate {row.get('hit_rate_l5', 0.5):.1%}/{row.get('hit_rate_l10', 0.5):.1%}. "
-        f"Matchup {row.get('matchup', 'N/A')}; {sharp_note}. Risk note: {risk_note}."
+        f"Adjusted edge {edge:.1%}; PF {pf_score}/100; Realism {realism}/100; confidence {confidence:.1%}. "
+        f"Line distance {line_delta:.1f}; L5/L10 estimate {row.get('hit_rate_l5', 0.5):.1%}/{row.get('hit_rate_l10', 0.5):.1%}. "
+        f"Context: {weather_note}; {injury_note}; {trend_note}; {movement_note}; {sharp_note}. "
+        f"Risk note: {risk_note}."
     )
 
 
 def strong_props(props_df: pd.DataFrame, pf_min: int = STRONG_PF_MIN, edge_min: float = STRONG_EDGE_MIN, prop_type: str | list[str] | None = None) -> pd.DataFrame:
-    props_df = ensure_columns(props_df, PROP_COLUMNS, {"pf_score": 0, "edge_pct": 0.0, "display_edge_pct": 0.0, "confidence": 0.0, "realism_score": 0, "positive_ev": False, "reasonable_line": False, "strong_pick": False})
+    props_df = ensure_columns(props_df, PROP_COLUMNS, {"pf_score": 0, "edge_pct": 0.0, "display_edge_pct": 0.0, "confidence": 0.0, "realism_score": 0, "positive_ev": False, "reasonable_line": False, "sharp_confirmed": True, "strong_pick": False})
     props_df = get_props_by_type(props_df, prop_type)
     if props_df.empty:
         return empty_props_frame()
@@ -492,6 +605,7 @@ def strong_props(props_df: pd.DataFrame, pf_min: int = STRONG_PF_MIN, edge_min: 
         & (props_df["confidence"] >= STRONG_CONFIDENCE_MIN)
         & (props_df["realism_score"] >= MIN_REALISM_SCORE)
         & (props_df["reasonable_line"] == True)
+        & (props_df["sharp_confirmed"].fillna(True) == True)
     ].copy()
 
 
