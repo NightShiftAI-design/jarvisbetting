@@ -1,6 +1,6 @@
 # Celebration Event & Venue Website
 
-Premium static website package for Celebration Event & Venue in Knoxville, Tennessee.
+Premium static website package for Celebration Event & Venue at 5335 Central Avenue Pike, Knoxville, Tennessee 37912.
 
 ## Overview
 

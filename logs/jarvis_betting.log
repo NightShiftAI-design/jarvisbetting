@@ -1,0 +1,390 @@
+2026-04-24 00:10:12 | INFO | jarvis_betting | Starting refresh_data cycle
+2026-04-24 00:10:12 | INFO | jarvis_betting | Requesting GET https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard params=None
+2026-04-24 00:10:12 | INFO | jarvis_betting | ESPN ingest complete for nfl: 1 events processed
+2026-04-24 00:10:12 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/ params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'h2h,spreads,totals', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:10:12 | INFO | jarvis_betting | Odds ingest complete for nfl: 0 outcomes persisted
+2026-04-24 00:10:12 | INFO | jarvis_betting | Requesting GET https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard params=None
+2026-04-24 00:10:13 | INFO | jarvis_betting | ESPN ingest complete for nba: 3 events processed
+2026-04-24 00:10:13 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/odds/ params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'h2h,spreads,totals', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:10:13 | INFO | jarvis_betting | Odds ingest complete for nba: 388 outcomes persisted
+2026-04-24 00:10:13 | INFO | jarvis_betting | Requesting GET https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard params=None
+2026-04-24 00:10:13 | INFO | jarvis_betting | ESPN ingest complete for mlb: 9 events processed
+2026-04-24 00:10:14 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/ params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'h2h,spreads,totals', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:10:14 | INFO | jarvis_betting | Odds ingest complete for mlb: 756 outcomes persisted
+2026-04-24 00:10:14 | INFO | jarvis_betting | Requesting GET https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard params=None
+2026-04-24 00:10:14 | INFO | jarvis_betting | ESPN ingest complete for soccer_epl: 1 events processed
+2026-04-24 00:10:14 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/odds/ params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'h2h,spreads,totals', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:10:15 | INFO | jarvis_betting | Odds ingest complete for soccer_epl: 696 outcomes persisted
+2026-04-24 00:10:15 | INFO | jarvis_betting | Requesting GET https://v3.football.api-sports.io/injuries params={'league': 39, 'season': 2026}
+2026-04-24 00:10:16 | INFO | jarvis_betting | Soccer injury ingest complete: 0 rows
+2026-04-24 00:10:16 | INFO | jarvis_betting | Starting train_and_project cycle
+2026-04-24 00:10:16 | INFO | jarvis_betting | Model training complete with 12 historical rows
+2026-04-24 00:10:16 | INFO | jarvis_betting | Saved model artifact to /Users/gshyamp/Documents/Jarvis_Betting/artifacts/jarvis_predictor.pkl
+2026-04-24 00:10:16 | INFO | jarvis_betting | Projection cycle complete: 43 rows persisted
+2026-04-24 00:29:58 | INFO | jarvis_betting | Requesting GET https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard params=None
+2026-04-24 00:29:59 | INFO | jarvis_betting | ESPN ingest complete for nfl: 1 events processed
+2026-04-24 00:29:59 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/ params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'h2h,spreads,totals', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:29:59 | INFO | jarvis_betting | Core odds ingest complete for nfl: 0 rows persisted
+2026-04-24 00:29:59 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'dateFormat': 'iso'}
+2026-04-24 00:30:00 | INFO | jarvis_betting | Player props ingest complete for nfl: 0 rows persisted
+2026-04-24 00:30:00 | INFO | jarvis_betting | Requesting GET https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard params=None
+2026-04-24 00:30:00 | INFO | jarvis_betting | ESPN ingest complete for nba: 3 events processed
+2026-04-24 00:30:00 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/odds/ params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'h2h,spreads,totals', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:00 | INFO | jarvis_betting | Core odds ingest complete for nba: 392 rows persisted
+2026-04-24 00:30:01 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'dateFormat': 'iso'}
+2026-04-24 00:30:02 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/8d8ab21ae69d529ee4bd01fb8ace8276/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points,player_rebounds,player_assists,player_threes', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:02 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/8d8ab21ae69d529ee4bd01fb8ace8276/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points_rebounds_assists,player_points_rebounds,player_points_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:03 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/5000a9f1dd7ba71de7ae6ceef836aa48/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points,player_rebounds,player_assists,player_threes', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:04 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/5000a9f1dd7ba71de7ae6ceef836aa48/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points_rebounds_assists,player_points_rebounds,player_points_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:05 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/af4847d63733e67ddd02f2bafac8ea6f/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points,player_rebounds,player_assists,player_threes', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:05 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/af4847d63733e67ddd02f2bafac8ea6f/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points_rebounds_assists,player_points_rebounds,player_points_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:06 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/e480da9a1b9dacbed9120388db4f133f/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points,player_rebounds,player_assists,player_threes', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:07 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/e480da9a1b9dacbed9120388db4f133f/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points_rebounds_assists,player_points_rebounds,player_points_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:07 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/9f41c322eb6aa09683dc241cacc31d7c/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points,player_rebounds,player_assists,player_threes', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:08 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/9f41c322eb6aa09683dc241cacc31d7c/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points_rebounds_assists,player_points_rebounds,player_points_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:09 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/184d31a9a32dffc9c91eac3766d6f12d/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points,player_rebounds,player_assists,player_threes', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:09 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/184d31a9a32dffc9c91eac3766d6f12d/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points_rebounds_assists,player_points_rebounds,player_points_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:10 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/b24e970fd53cf667dd009e54d107d4b1/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points,player_rebounds,player_assists,player_threes', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:11 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/b24e970fd53cf667dd009e54d107d4b1/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points_rebounds_assists,player_points_rebounds,player_points_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:12 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/d94d967f8600a3fb8b869f32c31a7357/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points,player_rebounds,player_assists,player_threes', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:12 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/basketball_nba/events/d94d967f8600a3fb8b869f32c31a7357/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_points_rebounds_assists,player_points_rebounds,player_points_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:13 | INFO | jarvis_betting | Player props ingest complete for nba: 6674 rows persisted
+2026-04-24 00:30:13 | INFO | jarvis_betting | Requesting GET https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard params=None
+2026-04-24 00:30:13 | INFO | jarvis_betting | ESPN ingest complete for mlb: 9 events processed
+2026-04-24 00:30:13 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/ params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'h2h,spreads,totals', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:13 | INFO | jarvis_betting | Core odds ingest complete for mlb: 756 rows persisted
+2026-04-24 00:30:14 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'dateFormat': 'iso'}
+2026-04-24 00:30:14 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/2c16b21f64ac893fc7dd8fd60f2a018c/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'pitcher_strikeouts,pitcher_outs,pitcher_hits_allowed,batter_hits', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:15 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/2c16b21f64ac893fc7dd8fd60f2a018c/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'batter_total_bases,batter_home_runs,batter_rbis', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:16 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/932ab74f8b661c6fcaea03f907780fce/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'pitcher_strikeouts,pitcher_outs,pitcher_hits_allowed,batter_hits', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:17 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/932ab74f8b661c6fcaea03f907780fce/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'batter_total_bases,batter_home_runs,batter_rbis', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:17 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/c5471ce2c30f59270ff07727d27ce902/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'pitcher_strikeouts,pitcher_outs,pitcher_hits_allowed,batter_hits', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:18 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/c5471ce2c30f59270ff07727d27ce902/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'batter_total_bases,batter_home_runs,batter_rbis', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:19 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/1daf20445fbf24373621ac69d10909d6/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'pitcher_strikeouts,pitcher_outs,pitcher_hits_allowed,batter_hits', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:19 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/1daf20445fbf24373621ac69d10909d6/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'batter_total_bases,batter_home_runs,batter_rbis', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:20 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/988cc0182b2c8cc4ce2bd71787602b09/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'pitcher_strikeouts,pitcher_outs,pitcher_hits_allowed,batter_hits', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:21 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/988cc0182b2c8cc4ce2bd71787602b09/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'batter_total_bases,batter_home_runs,batter_rbis', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:22 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/8a412fa061b10c75d57bc591bf081271/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'pitcher_strikeouts,pitcher_outs,pitcher_hits_allowed,batter_hits', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:22 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/8a412fa061b10c75d57bc591bf081271/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'batter_total_bases,batter_home_runs,batter_rbis', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:23 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/1a7da3935dee427bcfb5038b6aca6b69/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'pitcher_strikeouts,pitcher_outs,pitcher_hits_allowed,batter_hits', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:24 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/1a7da3935dee427bcfb5038b6aca6b69/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'batter_total_bases,batter_home_runs,batter_rbis', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:24 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/781378f4580bd5ca464d5bfa8f1035a2/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'pitcher_strikeouts,pitcher_outs,pitcher_hits_allowed,batter_hits', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:25 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/baseball_mlb/events/781378f4580bd5ca464d5bfa8f1035a2/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'batter_total_bases,batter_home_runs,batter_rbis', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:25 | INFO | jarvis_betting | Player props ingest complete for mlb: 2043 rows persisted
+2026-04-24 00:30:25 | INFO | jarvis_betting | Requesting GET https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard params=None
+2026-04-24 00:30:25 | INFO | jarvis_betting | ESPN ingest complete for soccer_epl: 1 events processed
+2026-04-24 00:30:26 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/odds/ params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'h2h,spreads,totals', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:26 | INFO | jarvis_betting | Core odds ingest complete for soccer_epl: 815 rows persisted
+2026-04-24 00:30:27 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'dateFormat': 'iso'}
+2026-04-24 00:30:27 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/1d779cd51003d8f01a9378594cea630e/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_goal_scorer_anytime,player_shots,player_shots_on_target,player_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:28 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/1d779cd51003d8f01a9378594cea630e/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_to_receive_card', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:29 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/1cb5fdae7703fb61d1de571066050f9b/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_goal_scorer_anytime,player_shots,player_shots_on_target,player_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:29 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/1cb5fdae7703fb61d1de571066050f9b/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_to_receive_card', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:30 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/8a5b7d24683637ab7350fe8a20af1a62/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_goal_scorer_anytime,player_shots,player_shots_on_target,player_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:31 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/8a5b7d24683637ab7350fe8a20af1a62/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_to_receive_card', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:32 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/e7eba73b41f6b75f5b4692376efb888a/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_goal_scorer_anytime,player_shots,player_shots_on_target,player_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:32 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/e7eba73b41f6b75f5b4692376efb888a/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_to_receive_card', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:33 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/c5137cd717098fbb38acd0236bc41b34/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_goal_scorer_anytime,player_shots,player_shots_on_target,player_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:34 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/c5137cd717098fbb38acd0236bc41b34/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_to_receive_card', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:34 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/76829fec3394b52a992b0a21eedbccf6/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_goal_scorer_anytime,player_shots,player_shots_on_target,player_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:35 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/76829fec3394b52a992b0a21eedbccf6/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_to_receive_card', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:36 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/ea38471acf4d5944929f9025e151376d/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_goal_scorer_anytime,player_shots,player_shots_on_target,player_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:36 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/ea38471acf4d5944929f9025e151376d/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_to_receive_card', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:37 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/eaaf4ed0986f4f5414fc727f5c235d48/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_goal_scorer_anytime,player_shots,player_shots_on_target,player_assists', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:38 | INFO | jarvis_betting | Requesting GET https://api.the-odds-api.com/v4/sports/soccer_epl/events/eaaf4ed0986f4f5414fc727f5c235d48/odds params={'apiKey': 'ef39d572412af88ebe3449c236226fc8', 'regions': 'us', 'markets': 'player_to_receive_card', 'oddsFormat': 'american', 'dateFormat': 'iso'}
+2026-04-24 00:30:38 | INFO | jarvis_betting | Player props ingest complete for soccer_epl: 3627 rows persisted
+2026-04-24 00:30:38 | INFO | jarvis_betting | Requesting GET https://v3.football.api-sports.io/injuries params={'league': 39, 'season': 2026}
+2026-04-24 00:30:38 | INFO | jarvis_betting | Soccer injury ingest complete: 0 rows
+2026-04-24 01:05:21 | WARNING | jarvis_betting | Prop market fetch failed for soccer_epl ['player_goal_scorer_anytime', 'player_shots', 'player_shots_on_target', 'player_assists', 'player_to_receive_card']: HTTP 401 from https://api.the-odds-api.com/v4/sports/soccer_epl/events/eaaf4ed0986f4f5414fc727f5c235d48/odds: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 01:05:29 | WARNING | jarvis_betting | Prop market fetch failed for soccer_epl ['player_goal_scorer_anytime', 'player_shots', 'player_shots_on_target', 'player_assists', 'player_to_receive_card']: HTTP 401 from https://api.the-odds-api.com/v4/sports/soccer_epl/events/e7173ec5e96af4ce96a3ecec6bb65e4c/odds: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 01:05:37 | WARNING | jarvis_betting | Prop market fetch failed for soccer_epl ['player_goal_scorer_anytime', 'player_shots', 'player_shots_on_target', 'player_assists', 'player_to_receive_card']: HTTP 401 from https://api.the-odds-api.com/v4/sports/soccer_epl/events/0602d732b6ac41cc00e19dd37073c401/odds: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 01:22:54 | ERROR | jarvis_betting | Ingestion failed for nfl: HTTP 401 from https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 422, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 360, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 173, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 151, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 141, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 01:23:02 | ERROR | jarvis_betting | Ingestion failed for nba: HTTP 401 from https://api.the-odds-api.com/v4/sports/basketball_nba/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 422, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 360, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 173, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 151, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 141, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/basketball_nba/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 01:23:10 | ERROR | jarvis_betting | Ingestion failed for mlb: HTTP 401 from https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 422, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 360, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 173, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 151, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 141, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/baseball_mlb/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 01:23:18 | ERROR | jarvis_betting | Ingestion failed for nhl: HTTP 401 from https://api.the-odds-api.com/v4/sports/icehockey_nhl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 422, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 360, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 173, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 151, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 141, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/icehockey_nhl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 01:23:26 | ERROR | jarvis_betting | Ingestion failed for ncaaf: HTTP 401 from https://api.the-odds-api.com/v4/sports/americanfootball_ncaaf/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 422, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 360, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 173, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 151, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 141, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/americanfootball_ncaaf/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 01:23:34 | ERROR | jarvis_betting | Ingestion failed for wnba: HTTP 401 from https://api.the-odds-api.com/v4/sports/basketball_wnba/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 422, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 360, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 173, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 151, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 141, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/basketball_wnba/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
+2026-04-24 01:23:42 | ERROR | jarvis_betting | Ingestion failed for soccer_epl: HTTP 401 from https://api.the-odds-api.com/v4/sports/soccer_epl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+Traceback (most recent call last):
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 422, in ingest_all_primary_sports
+    results[f"{sport_key}_odds"] = self.ingest_odds_for_sport(sport_key)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 360, in ingest_odds_for_sport
+    payload = self.odds.get_odds(EXTENDED_SPORT_CONFIG[sport_key]["odds_sport_key"])
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 173, in get_odds
+    return self.get_json(
+           ^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 151, in get_json
+    payload = self._request("GET", url, params=params).json()
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 331, in wrapped_f
+    return copy(f, *args, **kw)
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 470, in __call__
+    do = self.iter(retry_state=retry_state)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 371, in iter
+    result = action(retry_state)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 413, in exc_check
+    raise retry_exc.reraise()
+          ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 184, in reraise
+    raise self.last_attempt.result()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Cellar/python@3.11/3.11.15/Frameworks/Python.framework/Versions/3.11/lib/python3.11/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/Users/gshyamp/Documents/Jarvis_Betting/.venv/lib/python3.11/site-packages/tenacity/__init__.py", line 473, in __call__
+    result = fn(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^
+  File "/Users/gshyamp/Documents/Jarvis_Betting/data_ingestion.py", line 141, in _request
+    raise APIRequestError(f"HTTP {response.status_code} from {url}: {response.text[:250]}")
+APIRequestError: HTTP 401 from https://api.the-odds-api.com/v4/sports/soccer_epl/odds/: {"message":"Usage quota has been reached. See usage plans at https://the-odds-api.com","error_code":"OUT_OF_USAGE_CREDITS","details_url":"https://the-odds-api.com/liveapi/guides/v4/api-error-codes.html#out-of-usage-credits"}
+
